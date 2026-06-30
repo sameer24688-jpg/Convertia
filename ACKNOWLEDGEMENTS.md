@@ -4,6 +4,10 @@ Convertia / `sdf_csv_converter` builds on open cheminformatics libraries, publis
 algorithms, and community tooling. We are grateful to the authors and maintainers
 listed below.
 
+This project is maintained as a **free public tool**, not a commercial product.
+It is our way of passing forward the benefit we received from open science and
+open-source cheminformatics.
+
 ## Cheminformatics runtimes
 
 | Project | Role in Convertia | License |

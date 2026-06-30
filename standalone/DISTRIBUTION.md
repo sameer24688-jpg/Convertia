@@ -1,5 +1,9 @@
 # Distributing Convertia
 
+Convertia is shared **free of charge** for research and everyday cheminformatics
+work — not for resale or proprietary repackaging. When you pass the zip to a
+colleague, you are sharing a community tool built on open-source foundations.
+
 This guide covers every common reason a shared `.exe` “does not work” on another
 PC, and how to avoid each problem.
 

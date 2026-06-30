@@ -8,6 +8,26 @@ One **dual-mode Windows executable** (~66 MB): double-click for the GUI, or run 
 
 Powered by **RDKit** (structures and descriptors), **JPLogP** (computed `CLogP` lipophilicity), and ChemDraw-aware parsing (nickname expansion, `chemicalproperty` titles, coordinate-based labels).
 
+**Free for the community.** Convertia is offered as a public research tool — not a commercial product. It exists because open-source cheminformatics (RDKit, CDK/JPLogP, Open Babel, and others) made it possible; the intent is to give that back to medicinal chemistry and SAR workflows, not to monetize work built on those foundations.
+
+---
+
+## Project intent
+
+Convertia is **not intended for commercial sale or proprietary licensing** by its
+maintainers. It is published openly so anyone in academia or industry can **use
+it freely** for plate conversion, descriptor export, and downstream analysis.
+
+That reflects a simple reciprocity: this project composes generous open-source
+libraries and published science. Charging for the wrapper would not sit right with
+that debt. If Convertia saves you time, the hoped-for return is citation, bug
+reports, or contributions — not payment.
+
+The [MIT License](LICENSE) keeps the code accessible; bundled components (RDKit,
+JPLogP/LGPL, Open Babel/GPL when included) retain their own terms — see
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ---
 
 ## Why Convertia?
