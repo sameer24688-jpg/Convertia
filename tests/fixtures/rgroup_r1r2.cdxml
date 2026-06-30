@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Synthetic fixture: a benzene ring carrying two R-groups (R1 at atom 1,
+     R2 at atom 4) drawn as GenericNickname nodes. R-groups must become RDKit
+     dummy atoms (atomic number 0) with atom-map numbers 1 and 2, so the
+     canonical SMILES contains [*:1] and [*:2]. -->
+<CDXML>
+<page>
+<fragment id="100">
+<n id="1" p="0 0"/>
+<n id="2" p="1 1"/>
+<n id="3" p="2 1"/>
+<n id="4" p="3 0"/>
+<n id="5" p="2 -1"/>
+<n id="6" p="1 -1"/>
+<n id="7" p="-1 0" NodeType="GenericNickname"><t p="-1 0"><s font="3" size="10">R1</s></t></n>
+<n id="8" p="4 0" NodeType="GenericNickname"><t p="4 0"><s font="3" size="10">R2</s></t></n>
+<b id="10" B="1" E="2" Order="2"/>
+<b id="11" B="2" E="3" Order="1"/>
+<b id="12" B="3" E="4" Order="2"/>
+<b id="13" B="4" E="5" Order="1"/>
+<b id="14" B="5" E="6" Order="2"/>
+<b id="15" B="6" E="1" Order="1"/>
+<b id="16" B="1" E="7" Order="1"/>
+<b id="17" B="4" E="8" Order="1"/>
+</fragment>
+</page>
+</CDXML>

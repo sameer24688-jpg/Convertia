@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Synthetic fixture: a single core carbon bearing an "OMe" nickname.
+     Models ChemDraw nickname serialization: the nickname <n> carries an
+     embedded <fragment> whose ExternalConnectionPoint marks the attachment
+     attachment atom. Expanding OMe must rewire the core bond onto the oxygen,
+     yielding dimethyl ether (C2H6O, MW ~46.07). -->
+<CDXML>
+<page>
+<fragment id="100">
+<n id="1" p="0 0" Element="6"/>
+<n id="2" p="10 0" NodeType="Nickname">
+<fragment id="200">
+<n id="201" p="10 0" Element="8"/>
+<n id="202" p="20 0"/>
+<n id="203" p="0 0" NodeType="ExternalConnectionPoint" ExternalConnectionNum="1"/>
+<b id="210" B="201" E="202"/>
+<b id="211" B="203" E="201"/>
+</fragment>
+<t p="10 0"><s font="3" size="10">OMe</s></t>
+</n>
+<b id="110" B="1" E="2"/>
+</fragment>
+</page>
+</CDXML>

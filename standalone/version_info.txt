@@ -1,0 +1,33 @@
+# UTF-8
+#
+# PyInstaller version-info resource for sdf_csv_converter.exe.
+# Keep filevers/prodvers and the version strings in sync with __version__ in
+# sdf_csv_converter/__init__.py (currently 1.2.1).
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 2, 1, 0),
+    prodvers=(1, 2, 1, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'sdf_csv_converter'),
+        StringStruct('FileDescription', 'SDF / CSV / CDX / CDXML molecular file converter'),
+        StringStruct('FileVersion', '1.2.1.0'),
+        StringStruct('InternalName', 'sdf_csv_converter'),
+        StringStruct('LegalCopyright', 'Copyright (c) 2026 Convertia contributors. MIT License. See LICENSE and THIRD_PARTY_NOTICES.md.'),
+        StringStruct('OriginalFilename', 'sdf_csv_converter.exe'),
+        StringStruct('ProductName', 'SDF / CSV / CDX / CDXML Converter'),
+        StringStruct('ProductVersion', '1.2.1.0')])
+      ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)

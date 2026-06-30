@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Synthetic fixture: a single core carbon bearing a "Ph" nickname.
+     The embedded fragment is a Kekule benzene; the ExternalConnectionPoint
+     attaches at ring atom 301. Expansion must yield toluene (C7H8, MW ~92.14)
+     with a 6-membered aromatic ring. -->
+<CDXML>
+<page>
+<fragment id="100">
+<n id="1" p="0 0" Element="6"/>
+<n id="2" p="10 0" NodeType="Nickname">
+<fragment id="300">
+<n id="301" p="10 0"/>
+<n id="302" p="11 1"/>
+<n id="303" p="12 1"/>
+<n id="304" p="13 0"/>
+<n id="305" p="12 -1"/>
+<n id="306" p="11 -1"/>
+<n id="307" p="0 0" NodeType="ExternalConnectionPoint" ExternalConnectionNum="1"/>
+<b id="310" B="301" E="302" Order="2"/>
+<b id="311" B="302" E="303" Order="1"/>
+<b id="312" B="303" E="304" Order="2"/>
+<b id="313" B="304" E="305" Order="1"/>
+<b id="314" B="305" E="306" Order="2"/>
+<b id="315" B="306" E="301" Order="1"/>
+<b id="316" B="307" E="301"/>
+</fragment>
+<t p="10 0"><s font="3" size="10">Ph</s></t>
+</n>
+<b id="110" B="1" E="2"/>
+</fragment>
+</page>
+</CDXML>

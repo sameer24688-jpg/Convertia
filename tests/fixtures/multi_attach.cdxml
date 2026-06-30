@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Synthetic fixture: a linker nickname with TWO ExternalConnectionPoints
+     (a drawn -O-CH2-O- bridge between two core carbons). Multi-attachment
+     expansion is intentionally out of scope, so this must fall back to
+     treating the nickname as a single atom and still convert without raising. -->
+<CDXML>
+<page>
+<fragment id="100">
+<n id="1" p="0 0" Element="6"/>
+<n id="2" p="30 0" Element="6"/>
+<n id="3" p="15 0" NodeType="Nickname">
+<fragment id="600">
+<n id="601" p="10 0" Element="8"/>
+<n id="602" p="15 0"/>
+<n id="603" p="20 0" Element="8"/>
+<n id="604" p="0 0" NodeType="ExternalConnectionPoint" ExternalConnectionNum="1"/>
+<n id="605" p="30 0" NodeType="ExternalConnectionPoint" ExternalConnectionNum="2"/>
+<b id="610" B="601" E="602"/>
+<b id="611" B="602" E="603"/>
+<b id="612" B="604" E="601"/>
+<b id="613" B="605" E="603"/>
+</fragment>
+<t p="15 0"><s font="3" size="10">OCH2O</s></t>
+</n>
+<b id="110" B="1" E="3"/>
+<b id="111" B="2" E="3"/>
+</fragment>
+</page>
+</CDXML>
