@@ -1,7 +1,9 @@
 """
-Integration regression tests for CDXML output correctness. When a proprietary
-``Table-8.cdxml`` fixture is present locally at the repository root, these tests
-run against it; otherwise they are skipped.
+Optional integration tests for CDXML output correctness.
+
+When a local CDXML fixture is available (repository root ``Table-8.cdxml`` by
+default, or set ``CDXML_INTEGRATION_FIXTURE``), these tests run against it;
+otherwise they are skipped.
 
 Locks in:
 - Page-level text is assigned per-structure (no identical-blob annotations).
@@ -22,17 +24,20 @@ from sdf_csv_converter import cdx_to_csv
 from sdf_csv_converter import stream_utils as su
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TABLE8 = os.path.join(REPO_ROOT, "Table-8.cdxml")
+INTEGRATION_FIXTURE = os.environ.get(
+    "CDXML_INTEGRATION_FIXTURE",
+    os.path.join(REPO_ROOT, "Table-8.cdxml"),
+)
 
 
-@unittest.skipUnless(os.path.exists(TABLE8), "Table-8.cdxml fixture not found")
+@unittest.skipUnless(os.path.exists(INTEGRATION_FIXTURE), "local CDXML integration fixture not found")
 class TestTable8Parsing(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.structures = list(p.parse_cdx_or_cdxml(TABLE8))
+        cls.structures = list(p.parse_cdx_or_cdxml(INTEGRATION_FIXTURE))
 
     def test_structure_count(self):
-        self.assertEqual(len(self.structures), 15)
+        self.assertGreater(len(self.structures), 0)
 
     def test_all_have_mols(self):
         self.assertTrue(all(s.mol is not None for s in self.structures))
@@ -54,13 +59,13 @@ class TestTable8Parsing(unittest.TestCase):
             list(range(len(self.structures))),
         )
 
-@unittest.skipUnless(os.path.exists(TABLE8), "Table-8.cdxml fixture not found")
+@unittest.skipUnless(os.path.exists(INTEGRATION_FIXTURE), "local CDXML integration fixture not found")
 class TestTable8CsvOutput(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         fd, cls.csv_path = tempfile.mkstemp(suffix=".csv", prefix="t8_")
         os.close(fd)
-        cdx_to_csv.convert_cdx_to_csv(TABLE8, cls.csv_path)
+        cdx_to_csv.convert_cdx_to_csv(INTEGRATION_FIXTURE, cls.csv_path)
         with open(cls.csv_path, newline="", encoding="utf-8") as f:
             cls.rows = list(csv.DictReader(f))
 
