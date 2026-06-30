@@ -1,29 +1,22 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec for the combined single-file sdf_csv_converter executable.
+PyInstaller spec for a **onedir** Convertia build (recommended for sharing).
 
-Produces one windowed onefile .exe that:
-- opens the GUI when double-clicked, and
-- runs the CLI when launched with arguments (see app_entry.py / win_console.py).
-
-This spec does NOT modify the sdf_csv_converter package; it imports it from the
-repository root and reuses its existing PyInstaller hook for RDKit DLLs.
+Unlike the onefile build, this does not unpack to %TEMP% on every launch, which
+avoids failures on PCs that block PyInstaller temp extraction.
 """
 import os
 
 from PyInstaller.utils.hooks import collect_all
 
-# SPECPATH is injected by PyInstaller and points at this file's directory.
 HERE = SPECPATH
 NA_ROOT = os.path.dirname(HERE)
 PKG_HOOKS = os.path.join(NA_ROOT, "sdf_csv_converter", "hooks")
 
 ICON = os.path.join(HERE, "assets", "app.ico")
-SPLASH_IMAGE = os.path.join(HERE, "assets", "splash.png")
 VERSION_FILE = os.path.join(HERE, "version_info.txt")
 ASSETS_DIR = os.path.join(HERE, "assets")
 
-# Collect heavy third-party packages (DLLs, data, hidden imports).
 datas, binaries, hiddenimports = [], [], []
 for asset_name in ("app.ico", "logo.png", "image.png"):
     asset_path = os.path.join(ASSETS_DIR, asset_name)
@@ -39,7 +32,6 @@ for pkg in ("rdkit", "openbabel", "tqdm"):
         pass
 
 hiddenimports += [
-    # Launcher + converter package modules.
     "win_console",
     "startup_errors",
     "sdf_csv_converter",
@@ -53,7 +45,6 @@ hiddenimports += [
     "sdf_csv_converter.cdx_parser",
     "sdf_csv_converter.molecule_processor",
     "sdf_csv_converter.stream_utils",
-    # RDKit submodules used at runtime.
     "rdkit.Chem",
     "rdkit.Chem.AllChem",
     "rdkit.Chem.Descriptors",
@@ -65,7 +56,6 @@ hiddenimports += [
     "openbabel",
     "openbabel.openbabel",
     "tqdm",
-    # GUI toolkit.
     "tkinter",
     "tkinter.filedialog",
     "tkinter.messagebox",
@@ -99,29 +89,16 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
-splash = Splash(
-    SPLASH_IMAGE,
-    binaries=a.binaries,
-    datas=a.datas,
-    text_pos=None,
-    always_on_top=True,
-)
-
 exe = EXE(
     pyz,
     a.scripts,
-    splash,
-    splash.binaries,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="Convertia",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -130,4 +107,14 @@ exe = EXE(
     entitlements_file=None,
     icon=ICON,
     version=VERSION_FILE,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name="Convertia",
 )

@@ -15,6 +15,9 @@ as a library and reuses its RDKit PyInstaller hook.
 For design details (launch dispatch, console attachment, build pipeline, and
 comparison with the legacy dual-exe builds), see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
+For sharing the exe with other people (SmartScreen, onefile vs onedir, error
+logs), see **[DISTRIBUTION.md](DISTRIBUTION.md)**.
+
 ## Build
 
 Prerequisites (one-time):
@@ -26,7 +29,13 @@ pip install pyinstaller pillow
 Then, from this `standalone/` folder:
 
 ```bash
-python build_standalone.py
+python build_standalone.py --zip
+```
+
+For locked-down PCs, prefer a folder build:
+
+```bash
+python build_standalone.py --onedir --zip
 ```
 
 The exe is written to `standalone/dist/Convertia.exe` (about 66 MB).

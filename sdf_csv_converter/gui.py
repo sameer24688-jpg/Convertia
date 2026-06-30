@@ -79,15 +79,17 @@ def _apply_window_branding(root: tk.Tk) -> str | None:
 
 
 def _popup_image_path() -> str | None:
-    """Launch popup image beside the exe (dist/image.png) or from assets."""
+    """Launch popup image: bundled assets first, then beside the exe."""
     candidates = []
     if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", "")
+        candidates.append(os.path.join(base, "assets", "image.png"))
         candidates.append(os.path.join(os.path.dirname(sys.executable), "image.png"))
     pkg_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(pkg_dir)
     candidates.extend([
-        os.path.join(repo_root, "standalone", "dist", "image.png"),
         os.path.join(repo_root, "standalone", "assets", "image.png"),
+        os.path.join(repo_root, "standalone", "dist", "image.png"),
     ])
     for path in candidates:
         if os.path.isfile(path):
@@ -390,8 +392,20 @@ class _LogRedirect:
 
 def main():
     root = tk.Tk()
+    root.withdraw()
+    root.update_idletasks()
+
+    if getattr(sys, "frozen", False):
+        try:
+            from startup_errors import close_pyinstaller_splash
+
+            close_pyinstaller_splash()
+        except Exception:
+            pass
+
     _show_launch_popup(root)
     ConverterGUI(root)
+    root.deiconify()
     root.mainloop()
 
 
