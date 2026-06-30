@@ -6,8 +6,8 @@ Standalone Windows utility for **CDXML, CDX, SDF, and CSV** chemical file
 conversions. Packaged as a **single dual-mode executable** — double-click for
 the GUI, or run from a terminal with arguments for the CLI.
 
-Powered by **RDKit** (structures and descriptors) with coordinate-based page-text
-assignment for ChemDraw exports.
+Powered by **RDKit** (structures and descriptors), **JPLogP** (computed `CLogP`
+lipophilicity), and coordinate-based page-text assignment for ChemDraw exports.
 
 ## Quick links
 

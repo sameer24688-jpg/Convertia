@@ -13,7 +13,7 @@ modify conversion logic.
 | Goal | How it is met |
 |------|----------------|
 | One portable `.exe` for end users | PyInstaller `--onefile` bundles CPython, RDKit, OpenBabel, and the converter package |
-| Double-click opens GUI | Console subsystem (`console=True`) with `hide_console_window()` on the GUI path |
+| Double-click opens GUI | Windowed subsystem (`console=False`) — no terminal flash |
 | CLI redirect and piping work | Console subsystem inherits parent shell stdout/stderr; UTF-8 via `ensure_console()` |
 | Same exe runs CLI from a terminal | `app_entry.py` dispatches on `sys.argv` |
 | Do not fork the converter codebase | Imports `sdf_csv_converter.*` from the repo root via `pathex`; reuses `sdf_csv_converter/hooks/` |
@@ -68,8 +68,7 @@ flowchart TD
     bundled --> args{"len(sys.argv) > 1?"}
     path --> args
     args -->|no| guiImport["Import sdf_csv_converter.gui.main"]
-    guiImport --> hideConsole["win_console.hide_console_window()"]
-    hideConsole --> guiRun["gui.main(): popup + main window"]
+    guiImport --> guiRun["gui.main(): popup + main window"]
     args -->|yes| cliPath["win_console.ensure_console()"]
     cliPath --> cliImport["Import sdf_csv_converter.main.main"]
     cliImport --> splashClose["close_pyinstaller_splash()"]
@@ -82,8 +81,9 @@ flowchart TD
 **Rules:**
 
 - **No arguments** (typical double-click): import the GUI while the PyInstaller
-  splash is visible, hide the console, then run `gui.main()` (launch popup +
-  main window). Splash closes when the Tk root is ready.
+  splash is visible, then run `gui.main()` (launch popup + main window). No
+  console window is created (`console=False`). Splash closes when the Tk root
+  is ready.
 - **Any arguments** (terminal invocation): ensure UTF-8 console streams, run the
   CLI, then close the splash.
 - **Startup failures** on the GUI path write `convertia_error.log` beside the exe
@@ -98,7 +98,6 @@ The desktop UI is a **tkinter** window with:
 | Input | Browse SDF, CSV, CDX, or CDXML |
 | Output format | **CSV** or **SDF** radio buttons (explicit choice) |
 | Output path | Browse save location; extension synced to selected format |
-| Options | SMILES column, workers, 3D, V3000, no computed properties |
 | Convert | High-contrast teal action button |
 | Log | Dark terminal-style conversion output |
 
@@ -107,9 +106,10 @@ output format from the **radio selection** (not inferred only from the path).
 
 ### CLI console (Windows)
 
-The exe uses PyInstaller's **console** bootloader (`console=True` in
-`standalone.spec`), so stdout/stderr pipes from `cmd` / PowerShell are inherited
-and redirection (`> file`, `2> log`) works. `ensure_console()` additionally sets
+The exe uses PyInstaller's **windowed** bootloader (`console=False` in
+`standalone.spec`), so double-clicking does not open a blank terminal. The CLI
+path calls `ensure_console()` to attach to the parent shell or allocate a console,
+so stdout/stderr redirection (`> file`, `2> log`) still works. `ensure_console()` additionally sets
 the console code page and Python streams to UTF-8 so Unicode in help text and
 the conversion summary (e.g. `→`) does not raise `UnicodeEncodeError` on legacy
 cp1252 consoles.
@@ -129,9 +129,8 @@ sequenceDiagram
     CLI-->>User: progress, summary, errors via inherited pipes
 ```
 
-On the **GUI** path, `hide_console_window()` calls `ShowWindow(SW_HIDE)` on the
-auto-allocated console (frozen exe only). A brief console flash may appear
-before hide runs on cold start.
+On the **GUI** path no console is allocated (windowed subsystem). The legacy
+``hide_console_window()`` helper remains for older console-subsystem builds.
 
 ---
 
@@ -156,7 +155,7 @@ flowchart LR
 | `hookspath=[sdf_csv_converter/hooks]` | Reuse existing RDKit hook | Avoid duplicating DLL collection logic |
 | `collect_all("rdkit")` etc. | Bundles DLLs and data files | RDKit/OpenBabel need native libraries at runtime |
 | `excludes` | matplotlib, scipy, pandas, Qt, jupyter, zmq | Smaller exe (~66 MB vs ~117 MB for legacy builds) |
-| `console=True` | Console bootloader (`run.exe`) | CLI stdout/stderr redirect; GUI path hides console via `hide_console_window()` |
+| `console=False` | Windowed bootloader (`runw.exe`) | No terminal on double-click; CLI uses `ensure_console()` |
 | `Splash(splash.png)` | Tcl/Tk splash during unpack | Masks onefile extraction delay for GUI users |
 | `icon=app.ico`, `version=version_info.txt` | Explorer icon + Properties dialog | Desktop-app polish |
 
@@ -184,7 +183,7 @@ the Python package:
 | CLI | `app_entry.run()` (with args) | `sdf_csv_converter.main.main()` |
 
 All conversion paths (`sdf_to_csv`, `csv_to_sdf`, `cdx_to_csv`, `cdx_to_sdf`,
-`cdx_parser`, `molecule_processor`) live in `sdf_csv_converter/` and are
+`cdx_parser`, `molecule_processor`, `clogp`) live in `sdf_csv_converter/` and are
 documented in the main [README](../sdf_csv_converter/README.md) and the core
 Architecture section there.
 
@@ -195,17 +194,22 @@ The standalone exe does not implement parsing itself; it calls the same
 
 ```mermaid
 flowchart LR
-    pageTexts["Page-level t text"] --> nearest["Nearest fragment by coordinates"]
+    chemprop["chemicalproperty BasisObjects"] --> titleCol["Title column"]
+    pageTexts["Other page-level t text"] --> nearest["Nearest fragment by coordinates"]
     nearest --> ann["Annotations column"]
     nearest --> cid["CompoundID column"]
-    fragments["Top-level fragments in document order"] --> xmlidx["XmlIndex 0..N-1"]
+    fragments["Page-level fragments (+ groups) in document order"] --> xmlidx["XmlIndex 0..N-1"]
     xmlidx --> csv["CSV rows in document order"]
 ```
 
-**Free-text labels:** page text is assigned per-structure (not duplicated to
-every row). See `_iter_page_structures` / `_nearest_index` in
-[`cdx_parser.py`](../sdf_csv_converter/cdx_parser.py). Dense plates are a known
-heuristic limitation — check `Annotations` and `CompoundID` in output.
+**Compound names:** ChemDraw links IUPAC captions to structures via
+`chemicalproperty` / `ChemicalPropertyDisplayID` / `BasisObjects` (see
+`_assign_titles_from_chemical_properties` in [`cdx_parser.py`](../sdf_csv_converter/cdx_parser.py)).
+
+**Other free-text labels:** non-name page text is assigned per-structure by
+coordinates (not duplicated to every row). See `_iter_page_structures` /
+`_nearest_index`. Dense plates may still mis-associate non-name labels — check
+`Annotations` and `CompoundID` in output.
 
 **Structure ordering:** single-threaded CDX/CDXML parse; every row gets
 `XmlIndex`; metadata columns first via `stream_utils.build_ordered_fieldnames`.

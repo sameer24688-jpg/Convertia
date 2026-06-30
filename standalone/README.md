@@ -51,7 +51,6 @@ The desktop window (`sdf_csv_converter/gui.py`) provides:
 - **Input** — browse SDF, CSV, CDX, or CDXML
 - **Output format** — choose **CSV** or **SDF** (radio buttons)
 - **Output file** — browse save path (extension follows selected format)
-- **Options** — SMILES column, workers, 3D coordinates, V3000 SDF, skip computed properties
 - **Convert** — high-contrast teal action button
 - **Log** — live conversion output
 
@@ -87,14 +86,14 @@ builds. All distributions share these behaviors (see also the main
 
 ### Free-text labels (page text)
 
-- ChemDraw page-level `<t>` text (compound IDs like `PROJ-42`, captions) is
-  **not** duplicated onto every structure.
-- Each text object is assigned to the **nearest** top-level fragment by
-  coordinates (heuristic).
-- Output columns: **`Annotations`** (all assigned text), **`CompoundID`**
-  (first code-like label detected).
-- **Limitation:** dense or overlapping SAR plates may mis-associate a label —
-  verify these columns in the output.
+- ChemDraw **compound names** (IUPAC captions under each structure) are read from
+  ``chemicalproperty`` elements and written to the **`Title`** column.
+- Other page-level ``<t>`` text (compound IDs like `PROJ-42`, notes) is assigned
+  to the **nearest** page-level structure fragment by coordinates (heuristic).
+- Output columns: **`Title`** (compound name), **`Annotations`** (other assigned
+  text), **`CompoundID`** (first code-like label detected).
+- **Limitation:** dense or overlapping SAR plates may still mis-associate
+  non-name labels — verify `CompoundID` and `Annotations` in the output.
 
 ### Structure ordering
 
@@ -102,6 +101,8 @@ builds. All distributions share these behaviors (see also the main
 - Every row carries **`XmlIndex`** (0-based, monotonic) so sequence is always
   recoverable downstream.
 - CSV metadata columns (`XmlIndex`, `Title`, `CompoundID`, ...) appear first.
+- RDKit computed columns include `CLogP` (JPLogP atom-contribution lipophilicity,
+  not Wildman–Crippen logP) and `NumStereoCenters` (stereogenic atom count).
 - `--workers` does not reorder CDX/CDXML output.
 
 Regression tests: [`../tests/test_cdx_table8.py`](../tests/test_cdx_table8.py).

@@ -5,7 +5,6 @@ Double-click to run — no command line needed.
 Provides:
 - File picker for input (SDF, CSV, CDX, CDXML)
 - File picker for output (automatically detected format)
-- Optional settings (workers, 3D, V3000, SMILES column)
 - Convert button with live progress output
 """
 import os
@@ -72,11 +71,6 @@ def _setup_theme(root: tk.Tk) -> ttk.Style:
     style.configure("TEntry", fieldbackground=_CARD, bordercolor=_BORDER, lightcolor=_BORDER, darkcolor=_BORDER)
     style.configure("TButton", padding=(10, 6))
     style.configure("TRadiobutton", background=_CARD, foreground=_TEXT)
-    style.configure("TCheckbutton", background=_CARD, foreground=_TEXT)
-    style.configure("TLabelframe", background=_BG, bordercolor=_BORDER)
-    style.configure("TLabelframe.Label", background=_BG, foreground=_TEXT, font=("Segoe UI", 10, "bold"))
-    style.configure("Options.TLabelframe", background=_CARD, bordercolor=_BORDER)
-    style.configure("Options.TLabelframe.Label", background=_CARD, foreground=_TEXT, font=("Segoe UI", 10, "bold"))
     return style
 
 def _asset_paths() -> tuple[str | None, str | None]:
@@ -206,8 +200,8 @@ class ConverterGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         logo_path = _apply_window_branding(root)
-        root.geometry("720x680")
-        root.minsize(640, 600)
+        root.geometry("720x560")
+        root.minsize(640, 500)
         root.resizable(True, True)
         _setup_theme(root)
 
@@ -265,28 +259,6 @@ class ConverterGUI:
         ttk.Button(out_frame, text="Browse…", command=self._browse_output).pack(side=tk.RIGHT, padx=(8, 0))
         self.out_info = tk.StringVar(value="")
         ttk.Label(out_card, textvariable=self.out_info, style="Muted.TLabel").pack(anchor=tk.W, pady=(6, 0))
-
-        # ── Options ──
-        opts_frame = ttk.LabelFrame(outer, text="Options", style="Options.TLabelframe", padding=12)
-        opts_frame.pack(fill=tk.X, pady=(0, 16))
-
-        r1 = ttk.Frame(opts_frame, style="Card.TFrame")
-        r1.pack(fill=tk.X, pady=(0, 6))
-        ttk.Label(r1, text="SMILES column:", style="Card.TLabel").pack(side=tk.LEFT)
-        self.smiles_col = tk.StringVar(value="SMILES")
-        ttk.Entry(r1, textvariable=self.smiles_col, width=16).pack(side=tk.LEFT, padx=(6, 0))
-        ttk.Label(r1, text="Workers:", style="Card.TLabel").pack(side=tk.LEFT, padx=(16, 0))
-        self.workers = tk.IntVar(value=0)
-        ttk.Spinbox(r1, from_=0, to=32, textvariable=self.workers, width=5).pack(side=tk.LEFT, padx=(6, 0))
-
-        r2 = ttk.Frame(opts_frame, style="Card.TFrame")
-        r2.pack(fill=tk.X)
-        self.gen_3d = tk.BooleanVar(value=False)
-        ttk.Checkbutton(r2, text="3D coordinates", variable=self.gen_3d).pack(side=tk.LEFT)
-        self.v3000 = tk.BooleanVar(value=False)
-        ttk.Checkbutton(r2, text="V3000 SDF", variable=self.v3000).pack(side=tk.LEFT, padx=(16, 0))
-        self.no_props = tk.BooleanVar(value=False)
-        ttk.Checkbutton(r2, text="No computed properties", variable=self.no_props).pack(side=tk.LEFT, padx=(16, 0))
 
         # ── Convert button (high contrast) ──
         self.convert_btn = tk.Button(
@@ -448,30 +420,18 @@ class ConverterGUI:
             if in_fmt in ("cdx", "cdxml") and out_fmt == "sdf":
                 stats = cdx_to_sdf.convert_cdx_to_sdf(
                     input_path=in_file, output_path=out_file,
-                    workers=self.workers.get(),
-                    generate_3d=self.gen_3d.get(),
-                    use_v3000=self.v3000.get(),
-                    no_properties=self.no_props.get(),
                 )
             elif in_fmt in ("cdx", "cdxml") and out_fmt == "csv":
                 stats = cdx_to_csv.convert_cdx_to_csv(
                     input_path=in_file, output_path=out_file,
-                    workers=self.workers.get(),
-                    no_properties=self.no_props.get(),
                 )
             elif in_fmt == "sdf" and out_fmt == "csv":
                 stats = sdf_to_csv.convert_sdf_to_csv(
                     input_path=in_file, output_path=out_file,
-                    workers=self.workers.get(),
-                    no_properties=self.no_props.get(),
                 )
             elif in_fmt == "csv" and out_fmt == "sdf":
                 stats = csv_to_sdf.convert_csv_to_sdf(
                     input_path=in_file, output_path=out_file,
-                    smiles_col=self.smiles_col.get(),
-                    workers=self.workers.get(),
-                    generate_3d=self.gen_3d.get(),
-                    use_v3000=self.v3000.get(),
                 )
             else:
                 print(f"ERROR: Unsupported conversion: {in_fmt} → {out_fmt}")

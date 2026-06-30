@@ -9,7 +9,9 @@ Supports:
 
 Key features:
 - Namespace-agnostic XML parsing (handles both namespaced and bare CDXML)
-- Only processes top-level fragments (direct children of <page>)
+- Page-level structures: each <fragment> that is a direct child of <page>, or a
+  direct child of a page-level <group> (ChemDraw often wraps structures in
+  groups), is processed as a separate structure
 - Nickname / abbreviation expansion: atoms drawn as Me, OMe, Ph, Boc, ... carry
   ChemDraw's full expansion as an embedded <fragment> with an
   ExternalConnectionPoint marking the attachment. These are flattened into the
@@ -19,9 +21,12 @@ Key features:
   single atom.
 - R-groups: labels like R / R1 / R2 (and GenericNickname nodes) become RDKit
   dummy atoms (atomic number 0) with atom-map numbers, e.g. [*:1].
-- Coordinate-based text assignment: page-level free text (compound IDs,
-  captions) is assigned to the NEAREST fragment by position, not duplicated
-  onto every fragment
+- Coordinate-based text assignment: page-level free text that is not a ChemDraw
+  compound-name field (see ``chemicalproperty``) is assigned to the NEAREST
+  fragment by position, not duplicated onto every fragment
+- Compound names: ChemDraw ``chemicalproperty`` elements (type 1) link each
+  structure to its caption ``<t>`` via ``BasisObjects`` and
+  ``ChemicalPropertyDisplayID``; this is preferred over coordinate heuristics
 - Explicit ordering: each structure carries xml_index/page_index so output row
   order is recoverable downstream
 - Extracts per-fragment: title, atom labels, assigned annotations, compound id,
@@ -49,7 +54,7 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Set, Tuple
 
 from rdkit import Chem
 
@@ -155,10 +160,11 @@ def parse_cdxml_streaming(
     max_structures: int = 0,
 ) -> Generator[CDXStructure, None, None]:
     """
-    Parse a CDXML file. Only processes top-level fragments (direct children of
-    <page>); nested fragments inside nickname atoms (e.g. "Me", "OMe") are not
-    treated as separate structures. Page-level free text is assigned to the
-    nearest fragment by coordinates (see ``_iter_page_structures``).
+    Parse a CDXML file. Processes page-level structure fragments (direct
+    children of <page>, or of page-level <group> elements); nested fragments
+    inside nickname atoms (e.g. "Me", "OMe") are not treated as separate
+    structures. Page-level free text is assigned to the nearest fragment by
+    coordinates (see ``_iter_page_structures``).
     """
     try:
         tree = ET.parse(filepath)
@@ -195,10 +201,10 @@ def _iter_page_structures(
     Shared CDXML walk used by both the file and string parsers.
 
     For each <page>:
-    1. Collect every direct-child <fragment> and its center coordinate.
-    2. Collect every page-level <t> with its coordinate.
-    3. Assign each page text to the nearest fragment (coordinate-based), instead
-       of duplicating all page text onto every fragment.
+    1. Collect every page-level structure fragment and its center coordinate.
+    2. Assign compound names from ChemDraw ``chemicalproperty`` links (type 1).
+    3. Assign remaining page-level ``<t>`` text to the nearest fragment by
+       coordinates (compound IDs, captions, etc.).
     4. Yield structures in document order, stamping ``xml_index``/``page_index``
        and detecting a ``compound_id`` from assigned text.
     """
@@ -211,18 +217,14 @@ def _iter_page_structures(
     structure_count = 0
 
     for page_index, page in enumerate(_find_children(root, "page")):
-        # Page-level free text with positions (compound IDs, captions, title).
-        page_text_items: List[Tuple[str, Optional[Tuple[float, float]]]] = []
-        for t_elem in _find_children(page, "t"):
-            text = _text_string(t_elem)
-            if text:
-                page_text_items.append((text, _text_point(t_elem)))
+        id_map = _page_id_map(page)
 
-        # Build every top-level fragment on the page first so text can be
-        # assigned to the nearest one regardless of document order.
+        # Build every page-level structure fragment first.
         structures: List[CDXStructure] = []
         centers: List[Optional[Tuple[float, float]]] = []
-        for frag_elem in _find_children(page, "fragment"):
+        fragment_ids: List[str] = []
+        group_ids: List[str] = []
+        for frag_elem, group_id in _iter_page_level_fragment_entries(page):
             fragment_atoms: Dict[int, ET.Element] = {}
             fragment_bonds: List[ET.Element] = []
             fragment_texts: List[ET.Element] = []
@@ -252,11 +254,24 @@ def _iter_page_structures(
             )
             structures.append(structure)
             centers.append(_fragment_center(frag_elem, fragment_atoms))
+            fragment_ids.append(fragment_id)
+            group_ids.append(group_id)
 
-        # Assign each page-level text to the nearest fragment by coordinates.
+        # ChemDraw compound names: chemicalproperty -> caption <t> via BasisObjects.
+        title_display_ids = _assign_titles_from_chemical_properties(
+            page, structures, fragment_ids, group_ids, id_map
+        )
+
+        # Remaining page-level text (not already used as a compound name).
         if structures:
-            for text, point in page_text_items:
-                structures[_nearest_index(centers, point)].annotations.append(text)
+            for t_elem in _find_children(page, "t"):
+                t_id = t_elem.attrib.get("id", "")
+                if t_id and t_id in title_display_ids:
+                    continue
+                text = _text_string(t_elem)
+                if not text:
+                    continue
+                structures[_nearest_index(centers, _text_point(t_elem))].annotations.append(text)
 
         # Yield in document order with explicit ordering + compound id.
         for structure in structures:
@@ -386,7 +401,7 @@ def structure_to_properties_dict(structure: CDXStructure) -> Dict[str, str]:
 
     Naming conventions (to avoid silently overwriting RDKit-computed values):
     - Ordering/metadata columns use bare names: XmlIndex, Title, CompoundID,
-      AtomLabels, Annotations.
+      Annotations.
     - ChemDraw-sourced properties are prefixed ``ChemDraw_`` (e.g.
       ChemDraw_MolecularWeight) so they never collide with RDKit columns.
     - Empty ChemProp label templates (e.g. "Molecular Weight: ") are dropped.
@@ -401,12 +416,6 @@ def structure_to_properties_dict(structure: CDXStructure) -> Dict[str, str]:
 
     if structure.compound_id:
         props["CompoundID"] = structure.compound_id
-
-    if structure.atom_labels:
-        labels_str = "; ".join(
-            f"{aid}:{label}" for aid, label in sorted(structure.atom_labels.items())
-        )
-        props["AtomLabels"] = labels_str
 
     if structure.annotations:
         props["Annotations"] = " | ".join(structure.annotations)
@@ -452,6 +461,102 @@ def _find_child(elem: ET.Element, tag: str) -> Optional[ET.Element]:
 def _find_children(elem: ET.Element, tag: str) -> List[ET.Element]:
     """Find all direct child elements by local tag name, namespace-agnostic."""
     return [child for child in elem if _local_tag(child.tag) == tag]
+
+
+def _iter_page_level_fragments(
+    page: ET.Element,
+) -> Generator[ET.Element, None, None]:
+    """
+    Yield structure-bearing ``<fragment>`` elements at page scope, in document order.
+
+    ChemDraw often wraps each structure in a ``<group>`` that is a direct child
+    of ``<page>``. Fragments nested inside nickname atoms (abbreviation
+    expansions) are intentionally excluded — only page-level fragments and
+    fragments inside page-level groups (recursively) are yielded.
+    """
+    for frag_elem, _group_id in _iter_page_level_fragment_entries(page):
+        yield frag_elem
+
+
+def _iter_page_level_fragment_entries(
+    page: ET.Element,
+) -> Generator[Tuple[ET.Element, str], None, None]:
+    """Yield ``(fragment, parent_group_id)`` pairs in document order."""
+    for child in page:
+        tag = _local_tag(child.tag)
+        if tag == "fragment":
+            yield child, ""
+        elif tag == "group":
+            group_id = child.attrib.get("id", "")
+            for frag_elem in _iter_group_fragments(child):
+                yield frag_elem, group_id
+
+
+def _iter_group_fragments(
+    group: ET.Element,
+) -> Generator[ET.Element, None, None]:
+    """Yield structure fragments inside a ``<group>``, in document order."""
+    for child in group:
+        tag = _local_tag(child.tag)
+        if tag == "fragment":
+            yield child
+        elif tag == "group":
+            yield from _iter_group_fragments(child)
+
+
+def _page_id_map(page: ET.Element) -> Dict[str, ET.Element]:
+    """Map ChemDraw object id attributes to elements under a page."""
+    id_map: Dict[str, ET.Element] = {}
+    for elem in page.iter():
+        elem_id = elem.attrib.get("id")
+        if elem_id:
+            id_map[elem_id] = elem
+    return id_map
+
+
+def _assign_titles_from_chemical_properties(
+    page: ET.Element,
+    structures: List[CDXStructure],
+    fragment_ids: List[str],
+    group_ids: List[str],
+    id_map: Dict[str, ET.Element],
+) -> Set[str]:
+    """
+    Assign ``structure.title`` from ChemDraw ``chemicalproperty`` name fields.
+
+    ChemDraw stores compound names as page-level caption ``<t>`` elements
+    referenced by ``ChemicalPropertyDisplayID``, with ``BasisObjects`` listing
+    the fragment/group/atom ids that belong to that structure.
+
+    Returns the set of caption ``<t>`` element ids consumed as titles so they
+    are not duplicated into ``annotations`` by the coordinate heuristic.
+    """
+    used_display_ids: Set[str] = set()
+    if not structures:
+        return used_display_ids
+
+    for cp in _find_children(page, "chemicalproperty"):
+        # Type 1 is the compound-name field in ChemDraw exports.
+        if cp.attrib.get("ChemicalPropertyType", "1") != "1":
+            continue
+        disp_id = cp.attrib.get("ChemicalPropertyDisplayID", "")
+        if not disp_id:
+            continue
+        disp_elem = id_map.get(disp_id)
+        if disp_elem is None:
+            continue
+        title = _text_string(disp_elem)
+        if not title:
+            continue
+        basis = set(cp.attrib.get("BasisObjects", "").split())
+
+        for i, (frag_id, group_id) in enumerate(zip(fragment_ids, group_ids)):
+            if (frag_id and frag_id in basis) or (group_id and group_id in basis):
+                structures[i].title = title
+                used_display_ids.add(disp_id)
+                break
+
+    return used_display_ids
 
 
 def _int_attr(elem: ET.Element, name: str) -> Optional[int]:

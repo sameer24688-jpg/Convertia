@@ -44,12 +44,13 @@ Convertia.exe table.cdx   -o table.csv       # requires OpenBabel
 | Abbreviations / nicknames (OMe, Ph, Boc...) | Yes -- expanded to full atoms from ChemDraw's embedded fragment | |
 | R-groups (R, R1, R2...) | Yes -- as dummy atoms with map numbers (`[*:1]`) | |
 | Molecule titles (in-fragment text) | Yes | |
-| Atom label *text* | Yes (as metadata) | |
+| Atom label *text* | Yes (used to build connectivity) | |
 | ChemDraw properties (`ChemDraw_*` columns) | Yes | |
 | Page text / compound IDs (e.g. PROJ-42) | Assigned to nearest structure by coordinates | |
+| Compound names (IUPAC captions) | Yes — via ChemDraw ``chemicalproperty`` links | |
 | Row order (`XmlIndex` column) | Yes (document order) | |
 | SMILES | | Yes (canonical, may differ from CDX) |
-| Molecular weight, formula, logP | | Yes (computed) |
+| Molecular weight, formula, CLogP, stereocenters | | Yes (computed) |
 | 3D coordinates (--3d) | | Yes (ETKDG + MMFF) |
 | **2D coordinates, label placement, bond styles, arrows, color** | | **Not retained** |
 
@@ -70,16 +71,18 @@ CSV columns / SDF tags come from two distinct sources and are kept in separate n
 
 | Source | Naming | Examples |
 |--------|--------|----------|
-| RDKit (computed) | bare names | `SMILES`, `MolecularWeight`, `Formula`, `logP`, `TPSA` |
+| RDKit (computed) | bare names | `SMILES`, `MolecularWeight`, `Formula`, `CLogP`, `TPSA`, `NumStereoCenters`, ... |
 | ChemDraw (from CDXML) | `ChemDraw_` prefix | `ChemDraw_LogP`, `ChemDraw_MeltingPoint` |
-| Parser metadata | bare names | `XmlIndex`, `Title`, `CompoundID`, `AtomLabels`, `Annotations` |
+| Parser metadata | bare names | `XmlIndex`, `Title`, `CompoundID`, `Annotations` |
 
 Because ChemDraw values are prefixed, they can never overwrite the RDKit-computed columns (previously both used `MolecularWeight`/`LogP`, so ChemDraw label templates like `"Molecular Weight: "` clobbered the real numbers). Empty ChemDraw label templates are dropped entirely.
 
+The RDKit lipophilicity column **`CLogP`** is computed with **JPLogP** (Plante & Werner, J Cheminform 2018) — an atom-contribution model ported from CDK. It is **not** RDKit Wildman–Crippen `MolLogP` (logP/SlogP) and **not** BioByte/ACD CLogP. If ChemDraw stores its own CLogP in the file, that value appears separately as **`ChemDraw_CLogP`**.
+
 ### Column order in CSV
 
-1. Metadata: `XmlIndex`, `Title`, `CompoundID`, `AtomLabels`, `Annotations` (only those present)
-2. RDKit standard descriptors (`SMILES`, `MolecularWeight`, ...)
+1. Metadata: `XmlIndex`, `Title`, `CompoundID`, `Annotations` (only those present)
+2. RDKit standard descriptors (`SMILES`, `MolecularWeight`, `Formula`, `CLogP`, `TPSA`, `NumHAcceptors`, `NumHDonors`, `NumRotatableBonds`, `NumHeavyAtoms`, `NumStereoCenters`)
 3. Other discovered properties (sorted)
 4. `ChemDraw_*` properties (sorted, grouped last)
 
@@ -93,7 +96,7 @@ Because ChemDraw values are prefixed, they can never overwrite the RDKit-compute
 | Critical | Complex stereochemistry may not survive roundtrip | Verify stereo after conversion; RDKit stereo handling improves each release |
 | Medium | Multi-attachment nicknames (linkers/superatoms with 2+ attachment points, e.g. a drawn `-OCH2O-` bridge) are not expanded -- they collapse to a single atom (graceful fallback) | Draw such linkers as explicit atoms in ChemDraw before export |
 | Medium | A bare abbreviation label with no embedded expansion fragment falls back to a single carbon for unknown groups | Re-type the abbreviation in ChemDraw so it carries its expansion, or draw the group out explicitly |
-| High | Page text -> structure assignment is a coordinate heuristic (nearest bounding box); densely packed or overlapping plates may mis-associate a label | Check the `CompoundID`/`Annotations` columns; widen spacing in ChemDraw if labels are ambiguous |
+| High | Page text -> structure assignment uses coordinates only for *non-name* captions (compound IDs, notes). Compound **names** are read from ChemDraw ``chemicalproperty`` ``BasisObjects`` links. Dense plates may still mis-associate non-name labels | Check `Title`, `CompoundID`, and `Annotations` columns |
 | Critical | CDX binary requires OpenBabel (separate install); CDXML/SDF/CSV work without it | `pip install openbabel` or export as CDXML from ChemDraw |
 | High | CSV/SDF multiline fields may be fragile with malformed inputs | Use `--strict` flag to fail on raw newlines instead of silently escaping |
 | High | PyInstaller `.exe` may have DLL bundling issues with RDKit or OpenBabel | Run `pyinstaller build.spec` or use the Python package directly |
@@ -165,7 +168,7 @@ sdf_csv_converter.exe data.csv -o data.sdf --strict
          |                                               |
          |  CDX/CDXML -> SDF/CSV                         |
  |  +-- cdx_parser.py   (tree-based, ns-agnostic)|
- |  |   +-- Top-level fragments only             |
+ |  |   +-- Page-level fragments (+ groups)       |
  |  |   +-- Expands nickname fragments (OMe, Ph) |
  |  |   +-- R-groups -> dummy atoms ([*:1])      |
  |  |   +-- Atom labels (OH, NH, Me, F...)       |
@@ -177,7 +180,7 @@ sdf_csv_converter.exe data.csv -o data.sdf --strict
          |                                               |
          |  Shared utilities                             |
          |  +-- molecule_processor.py  (RDKit: SMILES,   |
-         |  |   MW, formula, logP, TPSA, 3D embedding)   |
+         |  |   MW, formula, CLogP, TPSA, 3D embedding)   |
          |  +-- stream_utils.py (multiprocessing, tqdm,  |
          |      newline escaping, validation)             |
          +-----------------------------------------------+
@@ -188,7 +191,7 @@ sdf_csv_converter.exe data.csv -o data.sdf --strict
 The CDXML parser (`cdx_parser.py`) uses tree-based XML parsing (not streaming iterparse) for reliable parent-child detection:
 
 1. **Namespace-agnostic** -- Works with both namespaced CDXML (`xmlns="..."`) and bare tags
-2. **Top-level fragments only** -- Processes only `<fragment>` elements that are direct children of `<page>` as separate structures
+2. **Page-level structures** -- Processes `<fragment>` elements that are direct children of `<page>`, or direct children of page-level `<group>` elements (ChemDraw often wraps each structure in a group), as separate structures
 3. **Nickname / abbreviation expansion** -- Atoms drawn as Me, OMe, Ph, Boc, ... carry ChemDraw's full expansion as an embedded `<fragment>` with an `ExternalConnectionPoint` marking the attachment. The parser flattens these into the parent structure and rewires the bond onto the attachment atom, so the real chemistry reaches the output. Single-attachment only; multi-attachment linkers fall back to a single atom
 4. **R-groups** -- Labels `R`/`R1`/`R2` and `GenericNickname` nodes become RDKit dummy atoms (atomic number 0) with atom-map numbers (e.g. `[*:1]`)
 5. **Atom label resolution** -- Maps CDXML labels (OH, NH, CH3, N, O, F, Br) to atomic numbers using a safe lookup table (no RDKit post-condition violations)
@@ -281,7 +284,9 @@ NA/
 |   +-- main.py, cli.py          CLI entry point and argument parsing
 |   +-- gui.py                   GUI window (tkinter; CSV/SDF output picker)
 |   +-- cdx_parser.py            CDXML parser (nickname expansion, R-groups, ordering)
-|   +-- molecule_processor.py    RDKit property engine (SMILES, MW, logP, 3D)
+|   +-- molecule_processor.py    RDKit property engine (SMILES, MW, CLogP, 3D)
+|   +-- clogp.py                 JPLogP CLogP calculator (distinct from Wildman–Crippen logP)
+|   +-- jplogp_weights.py        JPLogP model coefficients (CDK/LGPL)
 |   +-- stream_utils.py          I/O, column ordering, tqdm, validation
 |   +-- sdf_to_csv.py, csv_to_sdf.py   SDF <-> CSV converters
 |   +-- cdx_to_sdf.py, cdx_to_csv.py   CDX/CDXML -> SDF/CSV converters

@@ -47,6 +47,8 @@ all_hiddenimports = (
         "openbabel",
         "openbabel.openbabel",
         "tqdm",
+        "sdf_csv_converter.clogp",
+        "sdf_csv_converter.jplogp_weights",
     ]
 )
 

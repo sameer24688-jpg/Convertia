@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- **Grouped CDXML structures.** ChemDraw often wraps each structure in a `<group>` under `<page>`. The parser now yields fragments inside page-level groups (in document order), not only direct `<page>` children — fixing plates like `test.cdxml` that previously exported a single row.
+- **Slimmer CSV output.** Removed `AtomLabels`, `NumRings`, `FractionCSP3`, and `MaxRingSize` columns; dropped the corresponding RDKit calculators.
+- **Simpler GUI.** Removed the Options panel; conversions use sensible defaults (SMILES column `SMILES`, 2D structures, computed properties on).
+- **Compound names → Title column.** ChemDraw `chemicalproperty` links assign IUPAC captions to structures reliably (fixes missing/duplicate names on dense plates).
+- **No console flash on GUI launch.** Standalone exe built with `console=False`; CLI still attaches or allocates a console via `ensure_console()`.
+- **`NumStereoCenters` column.** RDKit `CalcNumAtomStereoCenters` is included in all CSV/SDF property output paths.
+- **Renamed `logP` → `CLogP`.** ChemDraw-sourced values remain `ChemDraw_CLogP`.
+- **Real CLogP calculation.** `CLogP` now uses JPLogP (atom-contribution, distinct from Wildman–Crippen logP); see `sdf_csv_converter/clogp.py`.
+
 ## 1.2.2 — GUI redesign and distribution hardening
 
 ### Added
@@ -40,7 +52,7 @@
 
 ### Fixed
 - **Page text is assigned per-structure.** Page-level `<t>` elements (compound IDs, captions) are matched to the nearest fragment by CDXML coordinates instead of being duplicated onto every structure.
-- **No more silent property overwrites.** ChemDraw `ChemProp*` values are emitted under a `ChemDraw_` prefix. Empty ChemDraw label templates are dropped. `MolecularWeight`, `Formula`, and `logP` are always the numeric RDKit values.
+- **No more silent property overwrites.** ChemDraw `ChemProp*` values are emitted under a `ChemDraw_` prefix. Empty ChemDraw label templates are dropped. `MolecularWeight`, `Formula`, and computed lipophilicity (`CLogP` / JPLogP) are always the numeric RDKit-side values.
 
 ### Added
 - **`XmlIndex` column** (plus internal `page_index`) on CDXML/CDX output.

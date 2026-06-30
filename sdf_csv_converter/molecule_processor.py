@@ -1,15 +1,16 @@
 """
 Property computation engine using RDKit.
-Computes: SMILES, MolecularWeight, Formula, logP, TPSA, NumHAcceptors,
-          NumHDonors, NumRotatableBonds, NumHeavyAtoms, NumRings,
-          FractionCSP3, MaxRingSize.
+Computes: SMILES, MolecularWeight, Formula, CLogP, TPSA, NumHAcceptors,
+          NumHDonors, NumRotatableBonds, NumHeavyAtoms, NumStereoCenters.
 All functions operate on a single RDKit Mol and return dicts.
 Designed for multiprocessing — pure functions, no shared state.
 """
 from typing import Dict, Optional
 
 from rdkit import Chem
-from rdkit.Chem import Descriptors, AllChem, Crippen, Lipinski, rdMolDescriptors, rdmolops
+from rdkit.Chem import Descriptors, AllChem, rdMolDescriptors, rdmolops
+
+from sdf_csv_converter.clogp import calc_clogp, format_clogp
 
 
 def compute_properties(mol: Chem.Mol, generate_3d: bool = False) -> Dict[str, str]:
@@ -43,9 +44,9 @@ def compute_properties(mol: Chem.Mol, generate_3d: bool = False) -> Dict[str, st
         formula = rdMolDescriptors.CalcMolFormula(mol_smi)
 
         try:
-            logp = Crippen.MolLogP(mol_smi)
+            clogp = calc_clogp(mol_smi)
         except Exception:
-            logp = float("nan")
+            clogp = float("nan")
 
         try:
             tpsa = rdMolDescriptors.CalcTPSA(mol_smi)
@@ -56,23 +57,19 @@ def compute_properties(mol: Chem.Mol, generate_3d: bool = False) -> Dict[str, st
         hbd = rdMolDescriptors.CalcNumHBD(mol_smi)
         rot_bonds = rdMolDescriptors.CalcNumRotatableBonds(mol_smi)
         heavy_atoms = mol_smi.GetNumHeavyAtoms()
-        num_rings = rdMolDescriptors.CalcNumRings(mol_smi)
-        fsp3 = rdMolDescriptors.CalcFractionCSP3(mol_smi)
-        max_ring_size = _calc_max_ring_size(mol_smi)
+        stereo_centers = rdMolDescriptors.CalcNumAtomStereoCenters(mol_smi)
 
         return {
             "SMILES": Chem.MolToSmiles(mol_smi, canonical=True),
             "MolecularWeight": f"{mw:.3f}",
             "Formula": formula,
-            "logP": f"{logp:.3f}" if not (isinstance(logp, float) and logp != logp) else "",
+            "CLogP": format_clogp(clogp),
             "TPSA": f"{tpsa:.2f}" if not (isinstance(tpsa, float) and tpsa != tpsa) else "",
             "NumHAcceptors": str(hba),
             "NumHDonors": str(hbd),
             "NumRotatableBonds": str(rot_bonds),
             "NumHeavyAtoms": str(heavy_atoms),
-            "NumRings": str(num_rings),
-            "FractionCSP3": f"{fsp3:.4f}",
-            "MaxRingSize": str(max_ring_size),
+            "NumStereoCenters": str(stereo_centers),
         }
     except Exception:
         return {}
@@ -95,14 +92,3 @@ def smiles_to_mol(smiles: str, generate_3d: bool = False) -> Optional[Chem.Mol]:
             # 3D generation failed, return 2D
             mol = Chem.RemoveHs(mol)
     return mol
-
-
-def _calc_max_ring_size(mol: Chem.Mol) -> int:
-    """Calculate the size of the largest ring in the molecule."""
-    try:
-        rings = mol.GetRingInfo().AtomRings()
-        if not rings:
-            return 0
-        return max(len(r) for r in rings)
-    except Exception:
-        return 0

@@ -5,7 +5,7 @@ Parses CDX/CDXML files, extracts structures with all labels (titles, atom labels
 annotations, ChemProp values), and writes SDF with metadata as data tags.
 
 Data tags:
-- Metadata: XmlIndex (stable order), CompoundID, AtomLabels, Annotations.
+- Metadata: XmlIndex (stable order), CompoundID, Annotations.
 - RDKit-computed descriptors under standard names (MolecularWeight, ...).
 - ChemDraw-sourced ChemProp values under a ``ChemDraw_`` prefix, so they never
   overwrite the RDKit-computed tags.

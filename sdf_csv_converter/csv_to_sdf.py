@@ -95,15 +95,13 @@ def convert_csv_to_sdf(
             "SMILES",
             "MolecularWeight",
             "Formula",
-            "logP",
+            "CLogP",
             "TPSA",
             "NumHAcceptors",
             "NumHDonors",
             "NumRotatableBonds",
             "NumHeavyAtoms",
-            "NumRings",
-            "FractionCSP3",
-            "MaxRingSize",
+            "NumStereoCenters",
         }
         tag_columns = [
             col

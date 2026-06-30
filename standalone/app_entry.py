@@ -31,7 +31,6 @@ def run() -> None:
             import win_console
 
             win_console.ensure_console()
-            # Import while the PyInstaller splash is still visible.
             from sdf_csv_converter.main import main as cli_main
 
             from startup_errors import close_pyinstaller_splash
@@ -45,9 +44,6 @@ def run() -> None:
         # this import on frozen builds.
         from sdf_csv_converter.gui import main as gui_main
 
-        import win_console
-
-        win_console.hide_console_window()
         gui_main()
     except Exception as exc:
         from startup_errors import report_startup_failure

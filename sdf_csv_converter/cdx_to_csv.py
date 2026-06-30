@@ -5,10 +5,10 @@ Parses CDX/CDXML files, extracts structures with all labels (titles, atom labels
 annotations, ChemProp values), and writes CSV with all metadata as columns.
 
 Columns:
-- Metadata first: XmlIndex (stable row order), Title, CompoundID, AtomLabels,
+- Metadata first: XmlIndex (stable row order), Title, CompoundID,
   Annotations.
 - RDKit-computed descriptors under their standard names (MolecularWeight,
-  Formula, logP, ...).
+  Formula, CLogP, ...).
 - ChemDraw-sourced ChemProp values under a ``ChemDraw_`` prefix, so they never
   overwrite the RDKit-computed columns.
 

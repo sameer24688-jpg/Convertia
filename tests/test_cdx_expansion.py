@@ -21,11 +21,21 @@ from rdkit.Chem import rdMolDescriptors
 from sdf_csv_converter import cdx_parser as p
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHEMPROP_PLATE = os.path.join(REPO_ROOT, "standalone", "dist", "test.cdxml")
+
+
+def _fixture_path(name: str) -> str:
+    return os.path.join(FIXTURES, name)
+
+
+def _has_fixture(name: str) -> bool:
+    return os.path.isfile(_fixture_path(name))
 
 
 def _only_structure(fixture_name):
     """Parse a fixture and return its single CDXStructure."""
-    path = os.path.join(FIXTURES, fixture_name)
+    path = _fixture_path(fixture_name)
     structures = list(p.parse_cdx_or_cdxml(path))
     assert len(structures) == 1, f"{fixture_name}: expected 1 structure"
     return structures[0]
@@ -87,6 +97,47 @@ class TestRGroupMapNumber(unittest.TestCase):
         self.assertEqual(p._rgroup_map_number("  R3  "), 3)
 
 
+class TestChemDrawCompoundNames(unittest.TestCase):
+    """ChemDraw plates link compound names via chemicalproperty + caption <t>."""
+
+    @unittest.skipUnless(os.path.exists(CHEMPROP_PLATE), "ChemDraw plate fixture not found")
+    def test_every_structure_gets_a_title(self):
+        structures = list(p.parse_cdx_or_cdxml(CHEMPROP_PLATE))
+        self.assertEqual(len(structures), 64)
+        self.assertTrue(all(s.title for s in structures))
+
+    @unittest.skipUnless(os.path.exists(CHEMPROP_PLATE), "ChemDraw plate fixture not found")
+    def test_dense_plate_indices_without_nearest_neighbor_titles(self):
+        structures = list(p.parse_cdx_or_cdxml(CHEMPROP_PLATE))
+        self.assertEqual(
+            structures[6].title,
+            "3-(2-fluoro-5-methylphenyl)-3-oxopropanenitrile",
+        )
+        self.assertEqual(
+            structures[13].title,
+            "3-(4-fluoro-3-(trifluoromethyl)phenyl)-3-oxopropanenitrile",
+        )
+
+
+@unittest.skipUnless(_has_fixture("grouped_fragments.cdxml"), "CDXML fixture not found (local only)")
+class TestGroupedFragments(unittest.TestCase):
+    """ChemDraw wraps plate entries in <group> elements on the page."""
+
+    def test_grouped_and_direct_fragments_are_all_structures(self):
+        path = os.path.join(FIXTURES, "grouped_fragments.cdxml")
+        structures = list(p.parse_cdx_or_cdxml(path))
+        self.assertEqual(len(structures), 3)
+        self.assertTrue(all(s.mol is not None for s in structures))
+        self.assertEqual([s.xml_index for s in structures], [0, 1, 2])
+
+
+@unittest.skipUnless(
+    all(
+        _has_fixture(name)
+        for name in ("nickname_ome.cdxml", "nickname_ph.cdxml", "nickname_boc.cdxml")
+    ),
+    "CDXML fixtures not found (local only)",
+)
 class TestExpansionFixtures(unittest.TestCase):
     """Embedded single-attachment nicknames expand to correct chemistry."""
 
@@ -126,6 +177,7 @@ class TestExpansionFixtures(unittest.TestCase):
             )
 
 
+@unittest.skipUnless(_has_fixture("rgroup_r1r2.cdxml"), "CDXML fixture not found (local only)")
 class TestRGroupExpansion(unittest.TestCase):
     def test_rgroups_become_mapped_dummy_atoms(self):
         s = _only_structure("rgroup_r1r2.cdxml")
@@ -140,6 +192,7 @@ class TestRGroupExpansion(unittest.TestCase):
         self.assertIn("[*:2]", smiles)
 
 
+@unittest.skipUnless(_has_fixture("multi_attach.cdxml"), "CDXML fixture not found (local only)")
 class TestMultiAttachFallback(unittest.TestCase):
     def test_multi_attachment_falls_back_to_single_atom(self):
         # 2+ ExternalConnectionPoints is out of scope: the nickname must collapse

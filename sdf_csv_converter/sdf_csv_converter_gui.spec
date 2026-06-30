@@ -3,7 +3,8 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
-hiddenimports = ['tqdm', 'tkinter', 'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.ttk']
+hiddenimports = ['tqdm', 'tkinter', 'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.ttk',
+                 'sdf_csv_converter.clogp', 'sdf_csv_converter.jplogp_weights']
 tmp_ret = collect_all('rdkit')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('openbabel')

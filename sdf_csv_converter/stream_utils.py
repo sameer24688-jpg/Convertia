@@ -288,7 +288,7 @@ def chunk_items(items: List[Any], chunk_size: int) -> Generator[List[Any], None,
 
 
 # Metadata/ordering columns that should appear first (in this order) when present.
-METADATA_COLUMNS = ["XmlIndex", "Title", "CompoundID", "AtomLabels", "Annotations"]
+METADATA_COLUMNS = ["XmlIndex", "Title", "CompoundID", "Annotations"]
 
 
 def build_ordered_fieldnames(
@@ -300,7 +300,7 @@ def build_ordered_fieldnames(
     Build an ordered list of CSV column names.
 
     Order:
-      1. Metadata columns (XmlIndex, Title, CompoundID, AtomLabels, Annotations)
+      1. Metadata columns (XmlIndex, Title, CompoundID, Annotations)
          when present.
       2. RDKit standard computed columns (SMILES, MolecularWeight, ...).
       3. Other discovered properties (sorted), e.g. SDF data tags.
@@ -329,15 +329,13 @@ def build_ordered_fieldnames(
             "SMILES",
             "MolecularWeight",
             "Formula",
-            "logP",
+            "CLogP",
             "TPSA",
             "NumHAcceptors",
             "NumHDonors",
             "NumRotatableBonds",
             "NumHeavyAtoms",
-            "NumRings",
-            "FractionCSP3",
-            "MaxRingSize",
+            "NumStereoCenters",
         ]
         fieldnames.extend(standard)
 

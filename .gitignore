@@ -16,11 +16,13 @@ standalone/dist/*
 !standalone/dist/image.png
 *.spec.bak
 
+# Chemical data files (local test inputs/outputs — never commit)
+*.csv
+*.cdxml
+*.cdx
+
 # Local test / smoke outputs
-standalone/_*.csv
 standalone/_*.txt
-standalone/_tmp*.csv
-*_t.csv
 *_ver.txt
 *_log.txt
 
@@ -33,12 +35,11 @@ Thumbs.db
 # Unrelated local binaries
 MestReNova.exe
 
-# Scratch / duplicate outputs
-Table-8_fixed.csv
-Table-8_new.csv
-d
+# Onedir build output (README only; exe lives under dist/)
+standalone/Convertia/
 
-# Proprietary ChemDraw fixtures (local only — not for public distribution)
-Table-8.cdxml
-Table-8.csv
-test.cdx
+# Legacy package PyInstaller output
+sdf_csv_converter/dist/
+
+# Scratch
+d

@@ -3,7 +3,7 @@
 PyInstaller spec for the combined single-file sdf_csv_converter executable.
 
 Produces one windowed onefile .exe that:
-- opens the GUI when double-clicked, and
+- opens the GUI when double-clicked (no console window), and
 - runs the CLI when launched with arguments (see app_entry.py / win_console.py).
 
 This spec does NOT modify the sdf_csv_converter package; it imports it from the
@@ -52,6 +52,8 @@ hiddenimports += [
     "sdf_csv_converter.cdx_to_csv",
     "sdf_csv_converter.cdx_parser",
     "sdf_csv_converter.molecule_processor",
+    "sdf_csv_converter.clogp",
+    "sdf_csv_converter.jplogp_weights",
     "sdf_csv_converter.stream_utils",
     # RDKit submodules used at runtime.
     "rdkit.Chem",
@@ -122,7 +124,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

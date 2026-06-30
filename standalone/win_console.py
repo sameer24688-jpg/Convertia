@@ -1,12 +1,12 @@
 """
 Console helpers for the combined single-file executable.
 
-The exe is built as a **console-subsystem** app (``console=True``) so CLI
-invocations inherit the parent shell's stdout/stderr pipes and redirection
-(``> file``, ``2> log``) works. On the **GUI** path (no arguments) the console
-window is hidden immediately so double-clicking feels like a desktop app.
+The exe is built as a **windowed** app (``console=False``) so double-clicking
+does not flash a blank terminal. On the **CLI** path (arguments present)
+``ensure_console()`` attaches to the parent console or allocates one so stdout,
+stderr, and redirection (``> file``, ``2> log``) still work.
 
-``ensure_console()`` forces UTF-8 on the console and Python text streams,
+``hide_console_window()`` remains available for legacy console-subsystem builds.
 because the CLI help and summary contain Unicode (e.g. ``\u2192``) that would
 raise ``UnicodeEncodeError`` on legacy cp1252 consoles.
 
