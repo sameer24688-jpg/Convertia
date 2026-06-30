@@ -6,17 +6,17 @@ Convert between SDF, CSV, CDX, and CDXML. **Chemical connectivity and ChemDraw m
 
 ## Quick Start
 
-**Recommended (single combined app)** -- double-click `standalone/dist/sdf_csv_converter.exe`. The same file runs the CLI when launched from a terminal with arguments (stdout/stderr redirect supported). CDXML output includes per-structure **`Annotations`** / **`CompoundID`** (coordinate-assigned page text) and monotonic **`XmlIndex`** row ordering. See [Standalone combined .exe](#standalone-combined-exe), [`../standalone/README.md`](../standalone/README.md#conversion-fidelity), and [`../standalone/ARCHITECTURE.md`](../standalone/ARCHITECTURE.md).
+**Recommended (single combined app)** — double-click `standalone/dist/Convertia.exe` or share `standalone/dist/Convertia.zip`. The same file runs the CLI when launched from a terminal with arguments (stdout/stderr redirect supported). CDXML output includes per-structure **`Annotations`** / **`CompoundID`** (coordinate-assigned page text) and monotonic **`XmlIndex`** row ordering. See [Standalone combined .exe](#standalone-combined-exe), [`../standalone/README.md`](../standalone/README.md#conversion-fidelity), and [`../standalone/ARCHITECTURE.md`](../standalone/ARCHITECTURE.md).
 
-**GUI** -- double-click `sdf_csv_converter_gui.exe` (no command line needed).
+**GUI** — double-click `Convertia.exe` (or run `python -m sdf_csv_converter.gui` during development). Pick input file, choose **CSV** or **SDF** output format, set output path, then click **Convert**.
 
 **CLI** -- open a terminal and run:
 
 ```bash
-sdf_csv_converter.exe input.sdf -o output.csv
-sdf_csv_converter.exe input.csv -o output.sdf --smiles-col SMILES
-sdf_csv_converter.exe table.cdxml -o table.sdf
-sdf_csv_converter.exe table.cdx   -o table.csv       # requires OpenBabel
+Convertia.exe input.sdf -o output.csv
+Convertia.exe input.csv -o output.sdf --smiles-col SMILES
+Convertia.exe table.cdxml -o table.sdf
+Convertia.exe table.cdx   -o table.csv       # requires OpenBabel
 ```
 
 > **Distribution options:** (1) the combined single-file exe in [`../standalone/`](../standalone/) (~66 MB, GUI + CLI in one file, CLI redirect works), or (2) two separate exes built from this package: `sdf_csv_converter_gui.exe` (windowed, GUI only) and `sdf_csv_converter.exe` (console, for scripting). All use the **same parser** — identical label assignment, `XmlIndex` ordering, and chemistry. See [Distribution and CLI output](#distribution-and-cli-output).
@@ -228,7 +228,7 @@ python -m sdf_csv_converter --help
 
 ### Standalone combined .exe (recommended)
 
-One portable Windows executable with **GUI on double-click** and **CLI when given arguments** (icon, version metadata, splash screen). Built from a separate folder that does not modify this package:
+One portable Windows executable with **GUI on double-click** and **CLI when given arguments** (Convertia branding, icon, splash, launch popup). Built from a separate folder that does not modify this package:
 
 ```bash
 pip install pyinstaller pillow
@@ -248,7 +248,7 @@ All distributions run the same conversion engine. Differences are **packaging on
 | How you run | GUI | CLI `> redirect` / pipes | Notes |
 |-------------|:---:|:---:|-------|
 | `python -m sdf_csv_converter` | No | Yes | Development / scripting |
-| [`standalone/dist/sdf_csv_converter.exe`](../standalone/dist/sdf_csv_converter.exe) | Double-click | **Yes** | Recommended single-file app |
+| [`standalone/dist/Convertia.exe`](../standalone/dist/Convertia.exe) | Double-click | **Yes** | Recommended single-file app |
 | `sdf_csv_converter/dist/sdf_csv_converter.exe` (legacy) | No | Yes | `build.spec`, `console=True` |
 | `sdf_csv_converter/dist/sdf_csv_converter_gui.exe` (legacy) | Double-click | No | `sdf_csv_converter_gui.spec`, `console=False` — not for scripted CLI |
 
@@ -279,7 +279,7 @@ Or use the spec files: `pyinstaller build.spec` (`console=True`, CLI) and `pyins
 NA/
 +-- sdf_csv_converter/           Core Python package (conversion engine)
 |   +-- main.py, cli.py          CLI entry point and argument parsing
-|   +-- gui.py                   GUI window (tkinter)
+|   +-- gui.py                   GUI window (tkinter; CSV/SDF output picker)
 |   +-- cdx_parser.py            CDXML parser (nickname expansion, R-groups, ordering)
 |   +-- molecule_processor.py    RDKit property engine (SMILES, MW, logP, 3D)
 |   +-- stream_utils.py          I/O, column ordering, tqdm, validation
@@ -300,7 +300,7 @@ NA/
 |   +-- ARCHITECTURE.md          Standalone packaging architecture
 |   +-- README.md                Build and run instructions
 |   +-- assets/                  app.ico, splash.png
-|   +-- dist/sdf_csv_converter.exe   Combined app (~66 MB)
+|   +-- dist/Convertia.exe       Combined app (~66 MB)
 +-- tests/                       Unit + integration tests (python -m unittest discover tests)
 |   +-- fixtures/                Synthetic CDXML fixtures (OMe, Ph, Boc, R-groups)
 +-- LICENSE                      MIT license (project source code)

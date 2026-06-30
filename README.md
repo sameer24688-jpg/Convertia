@@ -29,12 +29,14 @@ python -m sdf_csv_converter input.cdxml -o out.csv
 
 ## Quick start (end users)
 
-Build or download `standalone/dist/Convertia.exe` (with `image.png` beside it for the launch popup), then double-click for
+Build or download `standalone/dist/Convertia.zip` (or `Convertia.exe` + `image.png`), then double-click for
 the GUI or run:
 
 ```bash
 Convertia.exe input.cdxml -o output.csv
 ```
+
+The GUI lets you pick **CSV** or **SDF** output before converting. See [`standalone/DISTRIBUTION.md`](standalone/DISTRIBUTION.md) for sharing with colleagues.
 
 See [`standalone/README.md`](standalone/README.md) for build instructions.
 

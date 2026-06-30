@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.2 — GUI redesign and distribution hardening
+
+### Added
+- **Modern Convertia GUI** — card layout, teal **Convert** button, dark log panel, explicit **CSV / SDF** output format picker.
+- **Startup error reporting** — `convertia_error.log` and message box on frozen exe launch failures (`standalone/startup_errors.py`).
+- **Distribution package** — `python build_standalone.py --zip` produces `dist/Convertia.zip`; see `standalone/DISTRIBUTION.md`.
+- **Onedir build** — `python build_standalone.py --onedir` for locked-down PCs.
+
+### Changed
+- GUI imports before console hide to avoid silent double-click failures.
+- Launch popup image bundled inside exe (`assets/image.png`); external `dist/image.png` optional.
+- Documentation updated for `Convertia.exe`, GUI features, and sharing workflow.
+
 ## 1.2.1 — Standalone redirect fix and documentation
 
 ### Fixed

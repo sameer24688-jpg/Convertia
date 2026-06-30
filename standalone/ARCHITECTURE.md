@@ -1,7 +1,7 @@
 # Standalone packaging architecture
 
 This document describes how the **combined single-file Windows executable**
-(`dist/sdf_csv_converter.exe`) is built and how it behaves at runtime. The
+(`dist/Convertia.exe`) is built and how it behaves at runtime. The
 standalone layer is a thin packaging shell around the existing
 [`sdf_csv_converter`](../sdf_csv_converter) package; it does not duplicate or
 modify conversion logic.
@@ -17,7 +17,8 @@ modify conversion logic.
 | CLI redirect and piping work | Console subsystem inherits parent shell stdout/stderr; UTF-8 via `ensure_console()` |
 | Same exe runs CLI from a terminal | `app_entry.py` dispatches on `sys.argv` |
 | Do not fork the converter codebase | Imports `sdf_csv_converter.*` from the repo root via `pathex`; reuses `sdf_csv_converter/hooks/` |
-| Polished desktop feel | Custom icon, embedded version metadata, splash screen during onefile unpack |
+| Polished desktop feel | Custom icon, splash, launch popup, modern tkinter GUI, startup error dialog |
+| Reliable distribution | `startup_errors.py` logs failures; `DISTRIBUTION.md` covers sharing and SmartScreen |
 
 ---
 
@@ -34,14 +35,23 @@ NA/
 └── standalone/                 # Packaging layer (this document)
     ├── app_entry.py            # Frozen entry point: GUI vs CLI
     ├── win_console.py          # Windows console attach + UTF-8 stdio
-    ├── standalone.spec         # PyInstaller spec
+    ├── startup_errors.py       # Fatal startup log + message box (frozen)
+    ├── generate_assets.py      # Build app.ico / splash / logo / image from Convertia.png
+    ├── standalone.spec         # PyInstaller onefile spec
+    ├── standalone_onedir.spec  # PyInstaller onedir spec (locked-down PCs)
     ├── version_info.txt        # Windows VSVersionInfo resource
-    ├── build_standalone.py     # Clean + build script
+    ├── build_standalone.py     # Clean + build + zip script
+    ├── DISTRIBUTION.md         # How to share the exe with end users
     ├── assets/
     │   ├── app.ico             # Multi-resolution application icon
-    │   └── splash.png          # Shown while onefile payload unpacks
+    │   ├── splash.png          # PyInstaller splash during unpack
+    │   ├── logo.png            # GUI header image
+    │   └── image.png           # Launch popup (also bundled in exe)
     └── dist/
-        └── sdf_csv_converter.exe
+        ├── Convertia.exe
+        ├── image.png           # Optional external popup (also bundled)
+        ├── README.txt            # Recipient quick-start
+        └── Convertia.zip         # Recommended share package
 ```
 
 ---
@@ -52,29 +62,48 @@ NA/
 
 ```mermaid
 flowchart TD
-    start["sdf_csv_converter.exe starts"] --> frozen{"PyInstaller frozen?"}
+    start["Convertia.exe starts"] --> frozen{"PyInstaller frozen?"}
     frozen -->|yes| bundled["Package already on sys.path"]
     frozen -->|no dev| path["Prepend NA repo root to sys.path"]
     bundled --> args{"len(sys.argv) > 1?"}
     path --> args
-    args -->|no| hideConsole["win_console.hide_console_window()"]
-    hideConsole --> guiPath["Import sdf_csv_converter.gui.main"]
+    args -->|no| guiImport["Import sdf_csv_converter.gui.main"]
+    guiImport --> hideConsole["win_console.hide_console_window()"]
+    hideConsole --> guiRun["gui.main(): popup + main window"]
     args -->|yes| cliPath["win_console.ensure_console()"]
     cliPath --> cliImport["Import sdf_csv_converter.main.main"]
-    guiPath --> splashClose["pyi_splash.close() if present"]
-    cliImport --> splashClose
-    splashClose --> guiRun["gui.main() -> Tk mainloop"]
+    cliImport --> splashClose["close_pyinstaller_splash()"]
     splashClose --> cliRun["main() -> argparse + convert"]
+    guiRun --> err{"Startup error?"}
+    cliRun --> err
+    err -->|yes| report["startup_errors: log + message box"]
 ```
 
 **Rules:**
 
-- **No arguments** (typical double-click): hide the console window, then run the tkinter GUI.
-- **Any arguments** (terminal invocation): ensure UTF-8 console streams, then run the CLI.
+- **No arguments** (typical double-click): import the GUI while the PyInstaller
+  splash is visible, hide the console, then run `gui.main()` (launch popup +
+  main window). Splash closes when the Tk root is ready.
+- **Any arguments** (terminal invocation): ensure UTF-8 console streams, run the
+  CLI, then close the splash.
+- **Startup failures** on the GUI path write `convertia_error.log` beside the exe
+  and show a Windows message box (no silent exit).
 
-The launcher closes the PyInstaller splash **after** heavy imports (RDKit, OpenBabel,
-tkinter) complete so the splash covers the slow onefile extraction and module
-load, not the idle GUI window.
+### GUI (`sdf_csv_converter/gui.py`)
+
+The desktop UI is a **tkinter** window with:
+
+| Area | Behavior |
+|------|----------|
+| Input | Browse SDF, CSV, CDX, or CDXML |
+| Output format | **CSV** or **SDF** radio buttons (explicit choice) |
+| Output path | Browse save location; extension synced to selected format |
+| Options | SMILES column, workers, 3D, V3000, no computed properties |
+| Convert | High-contrast teal action button |
+| Log | Dark terminal-style conversion output |
+
+Conversion routing matches the CLI: input format from the file extension,
+output format from the **radio selection** (not inferred only from the path).
 
 ### CLI console (Windows)
 
@@ -114,9 +143,9 @@ flowchart LR
     entry["app_entry.py"] --> pi
     pkg["sdf_csv_converter/*"] --> pi
     rdkit["rdkit + openbabel + tqdm"] --> pi
-    assets["app.ico + splash.png + version_info.txt"] --> pi
+    assets["app.ico + splash + logo + image.png"] --> pi
     hook["hooks/hook-rdkit.py"] --> pi
-    pi --> exe["dist/sdf_csv_converter.exe"]
+    pi --> exe["dist/Convertia.exe"]
 ```
 
 ### `standalone.spec` highlights
@@ -184,7 +213,7 @@ Locked by [`tests/test_cdx_table8.py`](../tests/test_cdx_table8.py).
 
 ### Comparison with legacy dual-exe builds
 
-| Aspect | `standalone/dist/sdf_csv_converter.exe` | `sdf_csv_converter/dist/*.exe` |
+| Aspect | `standalone/dist/Convertia.exe` | `sdf_csv_converter/dist/*.exe` |
 |--------|----------------------------------------|--------------------------------|
 | Count | **One** combined exe | Two (CLI + GUI) |
 | Subsystem | Console (`run.exe`); hidden on GUI path | CLI: console; GUI: windowed |
@@ -216,11 +245,14 @@ was intentionally out of scope for the portable single-exe deliverable.
 | Asset | File | Effect |
 |-------|------|--------|
 | Application icon | `assets/app.ico` | Explorer, taskbar, file Properties |
-| Splash image | `assets/splash.png` | Shown during GUI/CLI cold start |
+| Splash image | `assets/splash.png` | PyInstaller splash during unpack |
+| Launch popup | `assets/image.png` (bundled + optional beside exe) | Shown at GUI start |
+| GUI header | `assets/logo.png` | Main window branding |
 | Version strings | `version_info.txt` | Windows file Properties (Product version, Company, etc.) |
 | Package version | `sdf_csv_converter/__init__.py` | `--version` CLI output; keep `version_info.txt` in sync |
 
-After changing any asset, rebuild with `python build_standalone.py`.
+After changing any asset, rebuild with `python build_standalone.py --zip`.
+See **[DISTRIBUTION.md](DISTRIBUTION.md)** for sharing `Convertia.zip` with end users.
 
 ---
 

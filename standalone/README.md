@@ -3,10 +3,11 @@
 This folder builds **one** portable Windows executable,
 `dist/Convertia.exe`, that behaves like a normal desktop app:
 
-- **Double-click** it -> the **GUI** opens (PyInstaller splash, then `image.png` popup, then the main window).
-- **Run it from a terminal with arguments** -> it runs the **CLI**.
+- **Double-click** it → the **GUI** opens (splash → launch popup → main window with CSV/SDF output picker).
+- **Run it from a terminal with arguments** → it runs the **CLI**.
 
-Ship **`dist/image.png`** next to the exe so the launch popup appears.
+Ship **`dist/Convertia.zip`** (from `python build_standalone.py --zip`) to colleagues.
+The zip includes `Convertia.exe`, `image.png`, and `README.txt`.
 
 It is completely self-contained and does **not** modify the
 [`../sdf_csv_converter`](../sdf_csv_converter) package; it imports that package
@@ -42,6 +43,19 @@ The exe is written to `standalone/dist/Convertia.exe` (about 66 MB).
 `standalone/dist/image.png` is copied there automatically on build.
 First launch is a little slow because a single-file exe unpacks itself to a temp
 directory; the GUI splash screen covers that delay.
+
+## GUI
+
+The desktop window (`sdf_csv_converter/gui.py`) provides:
+
+- **Input** — browse SDF, CSV, CDX, or CDXML
+- **Output format** — choose **CSV** or **SDF** (radio buttons)
+- **Output file** — browse save path (extension follows selected format)
+- **Options** — SMILES column, workers, 3D coordinates, V3000 SDF, skip computed properties
+- **Convert** — high-contrast teal action button
+- **Log** — live conversion output
+
+Startup failures write **`convertia_error.log`** beside the exe and show an error dialog.
 
 ## Run
 
@@ -97,15 +111,21 @@ Regression tests: [`../tests/test_cdx_table8.py`](../tests/test_cdx_table8.py).
 ```
 standalone/
   app_entry.py         Combined entry point (GUI when no args, CLI with args)
+  startup_errors.py    Startup failure log + message box
   win_console.py       Console hide (GUI) + UTF-8 stdio (CLI)
-  standalone.spec      PyInstaller spec (onefile, console subsystem, icon + splash)
-  version_info.txt     Windows version/product metadata (keep in sync with __version__)
-  build_standalone.py  Clean + build + report size
-  ARCHITECTURE.md      Packaging design (launch flow, build pipeline, trade-offs)
+  generate_assets.py   Build icons/splash/logo/popup from ../Convertia.png
+  standalone.spec      PyInstaller onefile spec
+  standalone_onedir.spec  PyInstaller folder spec (locked-down PCs)
+  version_info.txt     Windows version/product metadata
+  build_standalone.py  Clean + build + optional zip
+  DISTRIBUTION.md      Sharing and troubleshooting for end users
+  ARCHITECTURE.md      Packaging design (launch flow, build pipeline)
   assets/
-    app.ico            Multi-resolution app icon (rebrand by replacing this)
-    splash.png         GUI splash image
-  dist/                Build output (Convertia.exe + image.png)
+    app.ico            Application icon
+    splash.png         PyInstaller splash
+    logo.png           GUI header image
+    image.png          Launch popup image
+  dist/                Build output (Convertia.exe, image.png, Convertia.zip)
   build/               PyInstaller work dir (safe to delete)
 ```
 
