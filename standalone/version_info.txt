@@ -19,13 +19,13 @@ VSVersionInfo(
       [
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'sdf_csv_converter'),
-        StringStruct('FileDescription', 'SDF / CSV / CDX / CDXML molecular file converter'),
+        [StringStruct('CompanyName', 'Convertia'),
+        StringStruct('FileDescription', 'Convertia — chemical format conversion suite'),
         StringStruct('FileVersion', '1.2.1.0'),
         StringStruct('InternalName', 'sdf_csv_converter'),
         StringStruct('LegalCopyright', 'Copyright (c) 2026 Convertia contributors. MIT License. See LICENSE and THIRD_PARTY_NOTICES.md.'),
         StringStruct('OriginalFilename', 'sdf_csv_converter.exe'),
-        StringStruct('ProductName', 'SDF / CSV / CDX / CDXML Converter'),
+        StringStruct('ProductName', 'Convertia'),
         StringStruct('ProductVersion', '1.2.1.0')])
       ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])

@@ -21,9 +21,14 @@ PKG_HOOKS = os.path.join(NA_ROOT, "sdf_csv_converter", "hooks")
 ICON = os.path.join(HERE, "assets", "app.ico")
 SPLASH_IMAGE = os.path.join(HERE, "assets", "splash.png")
 VERSION_FILE = os.path.join(HERE, "version_info.txt")
+ASSETS_DIR = os.path.join(HERE, "assets")
 
 # Collect heavy third-party packages (DLLs, data, hidden imports).
 datas, binaries, hiddenimports = [], [], []
+for asset_name in ("app.ico", "logo.png"):
+    asset_path = os.path.join(ASSETS_DIR, asset_name)
+    if os.path.isfile(asset_path):
+        datas.append((asset_path, "assets"))
 for pkg in ("rdkit", "openbabel", "tqdm"):
     try:
         d, b, h = collect_all(pkg)

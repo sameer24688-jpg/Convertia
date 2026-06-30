@@ -26,7 +26,19 @@ def _clean() -> None:
             shutil.rmtree(path, ignore_errors=True)
 
 
+def _ensure_assets() -> None:
+    source = os.path.join(os.path.dirname(HERE), "Convertia.png")
+    ico = os.path.join(HERE, "assets", "app.ico")
+    if os.path.isfile(source) and (
+        not os.path.isfile(ico)
+        or os.path.getmtime(source) > os.path.getmtime(ico)
+    ):
+        print("Regenerating assets from Convertia.png ...")
+        subprocess.run([sys.executable, os.path.join(HERE, "generate_assets.py")], check=True)
+
+
 def main() -> int:
+    _ensure_assets()
     _clean()
 
     cmd = [
@@ -46,6 +58,12 @@ def main() -> int:
     if not os.path.isfile(EXE_PATH):
         print(f"\nBuild reported success but exe not found at {EXE_PATH}.")
         return 1
+
+    popup_src = os.path.join(HERE, "assets", "image.png")
+    popup_dst = os.path.join(DIST_DIR, "image.png")
+    if os.path.isfile(popup_src):
+        shutil.copy2(popup_src, popup_dst)
+        print(f"  Popup image: {popup_dst}")
 
     size_mb = os.path.getsize(EXE_PATH) / (1024 * 1024)
     print("\n" + "=" * 60)

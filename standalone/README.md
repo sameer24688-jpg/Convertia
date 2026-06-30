@@ -99,9 +99,10 @@ standalone/
 
 ## Rebranding
 
-Replace `assets/app.ico` (and optionally `assets/splash.png`) with your own
-artwork and rebuild. To change the displayed version/company/product strings,
-edit `version_info.txt`.
+Replace `../Convertia.png` and run `python generate_assets.py` to refresh
+`assets/app.ico`, `assets/splash.png`, and `assets/logo.png`, or let
+`build_standalone.py` regenerate them automatically when the source image changes.
+To change the displayed version/company/product strings, edit `version_info.txt`.
 
 ## Size note
 

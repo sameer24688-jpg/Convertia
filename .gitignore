@@ -11,7 +11,9 @@ venv/
 # PyInstaller
 build/
 build_gui/
-dist/
+/dist/
+standalone/dist/*
+!standalone/dist/image.png
 *.spec.bak
 
 # Local test / smoke outputs

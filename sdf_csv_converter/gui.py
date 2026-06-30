@@ -36,6 +36,119 @@ OUTPUT_EXTS = [
     ("CSV files", "*.csv"),
 ]
 
+_APP_TITLE = "Convertia"
+
+
+def _asset_paths() -> tuple[str | None, str | None]:
+    """Return (icon.ico path, logo.png path) for dev and frozen runs."""
+    candidates = []
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", "")
+        candidates.append(os.path.join(base, "assets"))
+    pkg_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(pkg_dir)
+    candidates.extend([
+        os.path.join(repo_root, "standalone", "assets"),
+        repo_root,
+    ])
+    icon_path = None
+    logo_path = None
+    for folder in candidates:
+        ico = os.path.join(folder, "app.ico")
+        png = os.path.join(folder, "logo.png")
+        if icon_path is None and os.path.isfile(ico):
+            icon_path = ico
+        if logo_path is None and os.path.isfile(png):
+            logo_path = png
+        if logo_path is None and os.path.isfile(os.path.join(folder, "Convertia.png")):
+            logo_path = os.path.join(folder, "Convertia.png")
+        if icon_path and logo_path:
+            break
+    return icon_path, logo_path
+
+
+def _apply_window_branding(root: tk.Tk) -> str | None:
+    root.title(_APP_TITLE)
+    icon_path, logo_path = _asset_paths()
+    if icon_path:
+        try:
+            root.iconbitmap(default=icon_path)
+        except tk.TclError:
+            pass
+    return logo_path
+
+
+def _popup_image_path() -> str | None:
+    """Launch popup image beside the exe (dist/image.png) or from assets."""
+    candidates = []
+    if getattr(sys, "frozen", False):
+        candidates.append(os.path.join(os.path.dirname(sys.executable), "image.png"))
+    pkg_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(pkg_dir)
+    candidates.extend([
+        os.path.join(repo_root, "standalone", "dist", "image.png"),
+        os.path.join(repo_root, "standalone", "assets", "image.png"),
+    ])
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _show_launch_popup(root: tk.Tk) -> None:
+    """Show image.png in a centered popup when the GUI starts."""
+    path = _popup_image_path()
+    if not path:
+        return
+
+    root.withdraw()
+    popup = tk.Toplevel(root)
+    popup.title(_APP_TITLE)
+    popup.resizable(False, False)
+    icon_path, _ = _asset_paths()
+    if icon_path:
+        try:
+            popup.iconbitmap(default=icon_path)
+        except tk.TclError:
+            pass
+
+    try:
+        photo = tk.PhotoImage(file=path)
+    except tk.TclError:
+        root.deiconify()
+        popup.destroy()
+        return
+
+    label = tk.Label(popup, image=photo, borderwidth=0, cursor="hand2")
+    label.image = photo
+    label.pack()
+
+    hint = ttk.Label(popup, text="Click or press Esc to continue", font=("Segoe UI", 9))
+    hint.pack(pady=(0, 8))
+
+    popup.update_idletasks()
+    w, h = popup.winfo_reqwidth(), popup.winfo_reqheight()
+    sw, sh = popup.winfo_screenwidth(), popup.winfo_screenheight()
+    popup.geometry(f"+{(sw - w) // 2}+{(sh - h) // 2}")
+
+    def close(_event=None) -> None:
+        try:
+            popup.grab_release()
+        except tk.TclError:
+            pass
+        popup.destroy()
+        root.deiconify()
+
+    popup.protocol("WM_DELETE_WINDOW", close)
+    label.bind("<Button-1>", close)
+    hint.bind("<Button-1>", close)
+    popup.bind("<Escape>", close)
+    popup.bind("<Return>", close)
+    popup.after(4000, close)
+    popup.grab_set()
+    popup.focus_set()
+    popup.wait_window()
+
 
 def _detect_format(path: str) -> str:
     """Detect format from extension."""
@@ -48,8 +161,8 @@ def _detect_format(path: str) -> str:
 class ConverterGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
-        root.title("SDF/CSV/CDX Converter")
-        root.geometry("650x520")
+        logo_path = _apply_window_branding(root)
+        root.geometry("650x580")
         root.resizable(True, True)
 
         # ── Styles ──
@@ -58,6 +171,13 @@ class ConverterGUI:
 
         main = ttk.Frame(root, padding=16)
         main.pack(fill=tk.BOTH, expand=True)
+
+        if logo_path:
+            try:
+                self._logo_image = tk.PhotoImage(file=logo_path)
+                ttk.Label(main, image=self._logo_image).pack(anchor=tk.CENTER, pady=(0, 12))
+            except tk.TclError:
+                pass
 
         # ── Input file ──
         ttk.Label(main, text="Input File", font=("Segoe UI", 10, "bold")).pack(anchor=tk.W)
@@ -270,7 +390,8 @@ class _LogRedirect:
 
 def main():
     root = tk.Tk()
-    app = ConverterGUI(root)
+    _show_launch_popup(root)
+    ConverterGUI(root)
     root.mainloop()
 
 
