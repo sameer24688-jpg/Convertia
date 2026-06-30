@@ -2,7 +2,7 @@
 
 ![Convertia](Convertia.png)
 
-**Created by [Dr. Sameer Reddy Marri](https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top)** · Postdoctoral Associate, Boston University · Center for Molecular Design
+**Created by [Dr. Sameer Reddy Marri](https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top)** · Postdoctoral Associate, Boston University · [Center for Molecular Discovery](https://www.bu.edu/cmd/about-the-bu-cmd/personnel/staff/)
 
 **Stop losing your structural metadata.** Move from ChemDraw plates to analysis-ready datasets in one step.
 
