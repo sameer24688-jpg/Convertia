@@ -2,6 +2,8 @@
 
 ![Convertia](Convertia.png)
 
+**Created by [Dr. Sameer Reddy Marri](https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top)** · Postdoctoral Associate, Boston University · Center for Molecular Design
+
 **Stop losing your structural metadata.** Move from ChemDraw plates to analysis-ready datasets in one step.
 
 **Convertia** is a specialized, zero-install utility for medicinal chemists and data curators. Standard format converters often treat ChemDraw exports as generic molecular files — stripping layout context, custom text, and plate metadata. Convertia is built to parse dense **SAR plates, compound libraries, and annotated screens** from **CDXML, CDX, SDF, and CSV**, and emit clean, fully populated **CSV** or **SDF** files that reflect the chemistry as drawn, enriched with pre-computed descriptors.
