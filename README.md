@@ -13,7 +13,7 @@ assignment for ChemDraw exports.
 
 | Path | Description |
 |------|-------------|
-| [`standalone/`](standalone/) | **Recommended** — build the combined `sdf_csv_converter.exe` (~66 MB) |
+| [`standalone/`](standalone/) | **Recommended** — build the combined `Convertia.exe` (~66 MB) |
 | [`sdf_csv_converter/`](sdf_csv_converter/) | Core Python package, legacy dual-exe builds, full documentation |
 | [`tests/`](tests/) | Unit and integration tests (`python -m unittest discover tests`) |
 | [`LICENSE`](LICENSE) | MIT license (project source code) |
@@ -29,11 +29,11 @@ python -m sdf_csv_converter input.cdxml -o out.csv
 
 ## Quick start (end users)
 
-Build or download `standalone/dist/sdf_csv_converter.exe`, then double-click for
+Build or download `standalone/dist/Convertia.exe` (with `image.png` beside it for the launch popup), then double-click for
 the GUI or run:
 
 ```bash
-sdf_csv_converter.exe input.cdxml -o output.csv
+Convertia.exe input.cdxml -o output.csv
 ```
 
 See [`standalone/README.md`](standalone/README.md) for build instructions.

@@ -1,10 +1,12 @@
 # standalone - combined single-file build
 
 This folder builds **one** portable Windows executable,
-`dist/sdf_csv_converter.exe`, that behaves like a normal desktop app:
+`dist/Convertia.exe`, that behaves like a normal desktop app:
 
-- **Double-click** it -> the **GUI** opens (with a splash screen while it loads).
+- **Double-click** it -> the **GUI** opens (PyInstaller splash, then `image.png` popup, then the main window).
 - **Run it from a terminal with arguments** -> it runs the **CLI**.
+
+Ship **`dist/image.png`** next to the exe so the launch popup appears.
 
 It is completely self-contained and does **not** modify the
 [`../sdf_csv_converter`](../sdf_csv_converter) package; it imports that package
@@ -27,7 +29,8 @@ Then, from this `standalone/` folder:
 python build_standalone.py
 ```
 
-The exe is written to `standalone/dist/sdf_csv_converter.exe` (about 66 MB).
+The exe is written to `standalone/dist/Convertia.exe` (about 66 MB).
+`standalone/dist/image.png` is copied there automatically on build.
 First launch is a little slow because a single-file exe unpacks itself to a temp
 directory; the GUI splash screen covers that delay.
 
@@ -36,17 +39,17 @@ directory; the GUI splash screen covers that delay.
 GUI (double-click, or):
 
 ```bash
-dist\sdf_csv_converter.exe
+dist\Convertia.exe
 ```
 
 CLI (same exe, with arguments):
 
 ```bash
-dist\sdf_csv_converter.exe input.cdxml -o output.csv
-dist\sdf_csv_converter.exe library.sdf  -o library.csv
-dist\sdf_csv_converter.exe data.csv     -o data.sdf --smiles-col SMILES
-dist\sdf_csv_converter.exe --version
-dist\sdf_csv_converter.exe --help
+dist\Convertia.exe input.cdxml -o output.csv
+dist\Convertia.exe library.sdf  -o library.csv
+dist\Convertia.exe data.csv     -o data.sdf --smiles-col SMILES
+dist\Convertia.exe --version
+dist\Convertia.exe --help
 ```
 
 CLI output supports **stdout/stderr redirection** (`> file`, `2> log`) because the
@@ -93,7 +96,7 @@ standalone/
   assets/
     app.ico            Multi-resolution app icon (rebrand by replacing this)
     splash.png         GUI splash image
-  dist/                Build output (sdf_csv_converter.exe)
+  dist/                Build output (Convertia.exe + image.png)
   build/               PyInstaller work dir (safe to delete)
 ```
 

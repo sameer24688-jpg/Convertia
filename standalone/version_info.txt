@@ -1,6 +1,6 @@
 # UTF-8
 #
-# PyInstaller version-info resource for sdf_csv_converter.exe.
+# PyInstaller version-info resource for Convertia.exe.
 # Keep filevers/prodvers and the version strings in sync with __version__ in
 # sdf_csv_converter/__init__.py (currently 1.2.1).
 VSVersionInfo(
@@ -22,9 +22,9 @@ VSVersionInfo(
         [StringStruct('CompanyName', 'Convertia'),
         StringStruct('FileDescription', 'Convertia — chemical format conversion suite'),
         StringStruct('FileVersion', '1.2.1.0'),
-        StringStruct('InternalName', 'sdf_csv_converter'),
+        StringStruct('InternalName', 'Convertia'),
         StringStruct('LegalCopyright', 'Copyright (c) 2026 Convertia contributors. MIT License. See LICENSE and THIRD_PARTY_NOTICES.md.'),
-        StringStruct('OriginalFilename', 'sdf_csv_converter.exe'),
+        StringStruct('OriginalFilename', 'Convertia.exe'),
         StringStruct('ProductName', 'Convertia'),
         StringStruct('ProductVersion', '1.2.1.0')])
       ]),

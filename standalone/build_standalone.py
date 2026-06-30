@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SPEC = os.path.join(HERE, "standalone.spec")
 BUILD_DIR = os.path.join(HERE, "build")
 DIST_DIR = os.path.join(HERE, "dist")
-EXE_PATH = os.path.join(DIST_DIR, "sdf_csv_converter.exe")
+EXE_PATH = os.path.join(DIST_DIR, "Convertia.exe")
 
 
 def _clean() -> None:
@@ -73,7 +73,7 @@ def main() -> int:
     print("=" * 60)
     print("  Double-click   -> GUI")
     print("  With arguments -> CLI, e.g.:")
-    print("    sdf_csv_converter.exe input.cdxml -o output.csv")
+    print("    Convertia.exe input.cdxml -o output.csv")
     return 0
 
 

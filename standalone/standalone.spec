@@ -114,7 +114,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="sdf_csv_converter",
+    name="Convertia",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
