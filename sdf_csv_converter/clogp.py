@@ -2,9 +2,16 @@
 Calculated lipophilicity (CLogP) via JPLogP.
 
 JPLogP is an atom-contribution logP model (Plante & Werner, J Cheminform 2018,
-10:61) ported from the CDK implementation (LGPL). It is distinct from RDKit's
-Wildman-Crippen MolLogP (often labeled logP / SlogP).
+10:61) ported from the CDK implementation.
 
+Copyright (C) 2018 Jeffrey Plante (Lhasa Limited) and CDK contributors.
+Original Java: org.openscience.cdk.qsar.descriptors.molecular.JPlogPDescriptor
+  https://github.com/cdk/cdk
+
+This Python port is derived from that LGPL-licensed source and is licensed under
+the GNU Lesser General Public License v2.1 or later. See THIRD_PARTY_NOTICES.md.
+
+It is distinct from RDKit's Wildman-Crippen MolLogP (often labeled logP / SlogP).
 BioByte/ACD CLogP used in some ChemDraw builds is proprietary and not available
 here; JPLogP is the open calculated alternative.
 """

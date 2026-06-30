@@ -1,5 +1,7 @@
-# JPLogP coefficients (CDK JPlogPDescriptor.WEIGHTS_CURR, LGPL).
-# Plante & Werner, J Cheminform 2018, 10:61.
+# JPLogP coefficients (CDK JPlogPDescriptor.WEIGHTS_CURR).
+# Copyright (C) 2018 Jeffrey Plante (Lhasa Limited) and CDK contributors.
+# Licensed under GNU LGPL v2.1+ — derived from https://github.com/cdk/cdk
+# Plante & Werner, J Cheminform 2018, 10:61. https://doi.org/10.1186/s13321-018-0316-5
 WEIGHTS = {
     115201: 0.09994758075256505,
     115200: 0.3379378715836258,

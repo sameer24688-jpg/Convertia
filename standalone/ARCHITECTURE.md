@@ -273,4 +273,6 @@ See **[DISTRIBUTION.md](DISTRIBUTION.md)** for sharing `Convertia.zip` with end 
 ## License
 
 - **This repository’s code** (including `standalone/` launcher scripts): [MIT License](../LICENSE).
-- **Bundled executables**: see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) (RDKit BSD, OpenBabel GPL v2 when included, Python PSF, etc.).
+- **JPLogP `CLogP` module:** [LGPL v2.1+](../THIRD_PARTY_NOTICES.md) — see [`clogp.py`](../sdf_csv_converter/clogp.py).
+- **Credits:** [ACKNOWLEDGEMENTS.md](../ACKNOWLEDGEMENTS.md)
+- **Bundled executables:** [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) (RDKit BSD, JPLogP LGPL, OpenBabel GPL v2 when included, Python PSF).

@@ -39,8 +39,9 @@ Most converters treat a ChemDraw export as “just another molecule file.” Con
 | [`standalone/`](standalone/) | **Recommended** — build the combined `Convertia.exe` (~66 MB) |
 | [`sdf_csv_converter/`](sdf_csv_converter/) | Core Python package, full documentation, legacy dual-exe builds |
 | [`tests/`](tests/) | Unit and integration tests (`python -m unittest discover tests`) |
+| [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md) | Credits (RDKit, CDK/JPLogP, Open Babel, ChemDraw format) |
 | [`LICENSE`](LICENSE) | MIT license (project source code) |
-| [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | Bundled dependency licenses (read before redistributing binaries) |
+| [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) | Bundled dependency licenses and redistribution guidance |
 
 ## Quick start (developers)
 
@@ -64,4 +65,9 @@ See [`standalone/README.md`](standalone/README.md) for build instructions.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE). Executable builds bundle third-party libraries; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- **Project code (MIT):** [`LICENSE`](LICENSE) — original parsing, GUI, converters, and standalone launcher.
+- **JPLogP `CLogP` module (LGPL):** [`sdf_csv_converter/clogp.py`](sdf_csv_converter/clogp.py) and [`jplogp_weights.py`](sdf_csv_converter/jplogp_weights.py) — adapted from [CDK](https://github.com/cdk/cdk) / Lhasa Limited.
+- **Credits:** [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md)
+- **Redistributing binaries:** read [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) first (RDKit BSD, JPLogP LGPL, Open Babel GPL when bundled).
+
+MIT applies to this repo’s own code; pre-built `Convertia.exe` files are **multi-license bundles**, not MIT-only.

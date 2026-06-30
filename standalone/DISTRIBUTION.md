@@ -34,6 +34,10 @@ python build_standalone.py --onedir --zip
 Send **`dist/Convertia.zip`**. Tell recipients to extract the whole folder and run
 `Convertia.exe` from inside it.
 
+Include (or link to) **[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)** and
+**[`ACKNOWLEDGEMENTS.md`](../ACKNOWLEDGEMENTS.md)** when sharing binaries so recipients
+understand bundled licenses (RDKit BSD, JPLogP LGPL, OpenBabel GPL if present).
+
 ### Use python.org Python for builds
 
 Do **not** build with Microsoft Store Python if you can avoid it.

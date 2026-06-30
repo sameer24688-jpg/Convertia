@@ -10,7 +10,8 @@
 - **No console flash on GUI launch.** Standalone exe built with `console=False`; CLI still attaches or allocates a console via `ensure_console()`.
 - **`NumStereoCenters` column.** RDKit `CalcNumAtomStereoCenters` is included in all CSV/SDF property output paths.
 - **Renamed `logP` → `CLogP`.** ChemDraw-sourced values remain `ChemDraw_CLogP`.
-- **Real CLogP calculation.** `CLogP` now uses JPLogP (atom-contribution, distinct from Wildman–Crippen logP); see `sdf_csv_converter/clogp.py`.
+- **Real CLogP calculation.** `CLogP` now uses JPLogP (atom-contribution, distinct from Wildman–Crippen logP); see `sdf_csv_converter/clogp.py` (LGPL, adapted from CDK).
+- **Acknowledgements and licensing docs.** Added `ACKNOWLEDGEMENTS.md`; expanded `THIRD_PARTY_NOTICES.md` with JPLogP LGPL and redistribution guidance.
 
 ## 1.2.2 — GUI redesign and distribution hardening
 

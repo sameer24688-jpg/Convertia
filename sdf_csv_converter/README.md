@@ -308,16 +308,22 @@ NA/
 |   +-- dist/Convertia.exe       Combined app (~66 MB)
 +-- tests/                       Unit + integration tests (python -m unittest discover tests)
 |   +-- fixtures/                Synthetic CDXML fixtures (OMe, Ph, Boc, R-groups)
++-- ACKNOWLEDGEMENTS.md          Credits (RDKit, CDK/JPLogP, Open Babel, ChemDraw format)
 +-- LICENSE                      MIT license (project source code)
-+-- THIRD_PARTY_NOTICES.md         Bundled dependency licenses (exe redistribution)
++-- THIRD_PARTY_NOTICES.md       Bundled dependency licenses and redistribution guidance
 ```
 
 ---
 
-## License
+## License & acknowledgements
 
-This project’s source code is licensed under the **[MIT License](../LICENSE)**.
+| Document | Scope |
+|----------|--------|
+| **[`LICENSE`](../LICENSE)** | MIT — original code in this package (`cdx_parser`, converters, GUI, etc.) |
+| **[`clogp.py`](clogp.py) / [`jplogp_weights.py`](jplogp_weights.py)** | LGPL v2.1+ — JPLogP port adapted from [CDK](https://github.com/cdk/cdk) / Lhasa Limited ([Plante & Werner, 2018](https://doi.org/10.1186/s13321-018-0316-5)) |
+| **[`ACKNOWLEDGEMENTS.md`](../ACKNOWLEDGEMENTS.md)** | Full credits (RDKit, Open Babel, Python, ChemDraw CDXML format) |
+| **[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)** | What applies when you **redistribute** `Convertia.exe` (BSD + LGPL + possible GPL) |
 
 Pre-built executables bundle third-party libraries (RDKit, OpenBabel, Python,
-etc.) under their own terms. See **[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)**
-before redistributing binaries — especially if OpenBabel (GPL v2) is included.
+etc.) under their own terms. Read **`THIRD_PARTY_NOTICES.md`** before sharing
+binaries — especially if OpenBabel (GPL v2) is included in the build.

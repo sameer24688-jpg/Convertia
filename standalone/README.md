@@ -144,9 +144,14 @@ is only possible by dropping one of those dependencies. Installing
 [UPX](https://upx.github.io/) and putting it on `PATH` before building will
 compress it further (the spec already sets `upx=True`).
 
-## License
+## License & acknowledgements
 
-Project source code: **[MIT License](../LICENSE)**.
+| Document | Scope |
+|----------|--------|
+| **[`LICENSE`](../LICENSE)** | MIT — `standalone/` launcher scripts and build tooling |
+| **[`ACKNOWLEDGEMENTS.md`](../ACKNOWLEDGEMENTS.md)** | Credits (RDKit, CDK/JPLogP, Open Babel, ChemDraw format) |
+| **[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)** | Redistribution guidance for `Convertia.exe` |
 
-Executable builds also bundle RDKit, OpenBabel, Python, and other libraries —
-see **[`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md)** before redistribution.
+Project source code: **MIT**. Executable builds bundle RDKit (BSD), JPLogP (LGPL),
+OpenBabel (GPL v2 when included), Python (PSF), and other libraries — see
+**`THIRD_PARTY_NOTICES.md`** before redistribution.
