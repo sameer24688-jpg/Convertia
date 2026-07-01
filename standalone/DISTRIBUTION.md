@@ -26,13 +26,14 @@ Expected one-file size: **~66 MB** (`69,658,371` bytes — verify after transfer
 ```bash
 cd standalone
 pip install pyinstaller pillow
-python build_standalone.py --zip
+python build_standalone.py --both --zip   # onefile + onedir + zip
 ```
 
-For maximum compatibility on corporate laptops:
+Or build only one target:
 
 ```bash
-python build_standalone.py --onedir --zip
+python build_standalone.py              # onefile only → dist/Convertia.exe
+python build_standalone.py --onedir     # folder only → dist/Convertia/
 ```
 
 Send **`dist/Convertia.zip`**. Tell recipients to extract the whole folder and run

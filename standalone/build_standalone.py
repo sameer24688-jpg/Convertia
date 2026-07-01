@@ -120,8 +120,11 @@ def _ensure_assets(python_exe: str) -> None:
         )
 
 
-def _clean() -> None:
-    for path in (BUILD_DIR, DIST_DIR):
+def _clean(*, dist: bool = True) -> None:
+    paths = [BUILD_DIR]
+    if dist:
+        paths.extend((DIST_DIR, os.path.join(HERE, "Convertia")))
+    for path in paths:
         if os.path.isdir(path):
             print(f"Removing {path}")
             shutil.rmtree(path, ignore_errors=True)
@@ -185,39 +188,56 @@ def _zip_distribution() -> str:
     return archive
 
 
-def build(*, onedir: bool, make_zip: bool) -> int:
+def build(*, onedir: bool, make_zip: bool, both: bool = False) -> int:
     python_exe = _select_python()
     print(f"Build Python: {python_exe}")
     _ensure_assets(python_exe)
-    _clean()
+    _clean(dist=True)
 
-    spec = ONEDIR_SPEC if onedir else ONEFILE_SPEC
-    cmd = [python_exe, "-m", "PyInstaller", "--noconfirm", "--clean", spec]
-    print("Running:", " ".join(cmd))
-    result = subprocess.run(cmd, cwd=HERE)
-    if result.returncode != 0:
-        print(f"\nBuild FAILED (PyInstaller exit {result.returncode}).")
-        return result.returncode
-
-    if onedir:
-        exe_path = os.path.join(DIST_DIR, "Convertia", "Convertia.exe")
+    targets: list[tuple[str, bool]] = []
+    if both:
+        targets = [(ONEDIR_SPEC, True), (ONEFILE_SPEC, False)]
     else:
-        exe_path = os.path.join(DIST_DIR, "Convertia.exe")
+        targets = [(ONEDIR_SPEC if onedir else ONEFILE_SPEC, onedir)]
 
-    if not os.path.isfile(exe_path):
-        print(f"\nBuild reported success but exe not found at {exe_path}.")
-        return 1
+    last_exe = ""
+    for spec, is_onedir in targets:
+        cmd = [python_exe, "-m", "PyInstaller", "--noconfirm", "--clean", spec]
+        print("Running:", " ".join(cmd))
+        result = subprocess.run(cmd, cwd=HERE)
+        if result.returncode != 0:
+            print(f"\nBuild FAILED (PyInstaller exit {result.returncode}).")
+            return result.returncode
+        _clean(dist=False)
+
+        if is_onedir:
+            last_exe = os.path.join(DIST_DIR, "Convertia", "Convertia.exe")
+        else:
+            last_exe = os.path.join(DIST_DIR, "Convertia.exe")
+
+        if not os.path.isfile(last_exe):
+            print(f"\nBuild reported success but exe not found at {last_exe}.")
+            return 1
 
     _copy_popup_image()
-    _write_readme(exe_path)
+    for exe_candidate in (
+        os.path.join(DIST_DIR, "Convertia.exe"),
+        os.path.join(DIST_DIR, "Convertia", "Convertia.exe"),
+    ):
+        if os.path.isfile(exe_candidate):
+            _write_readme(exe_candidate)
 
-    size_mb = os.path.getsize(exe_path) / (1024 * 1024)
+    size_mb = os.path.getsize(last_exe) / (1024 * 1024)
     print("\n" + "=" * 60)
     print("  Build complete")
-    print(f"  Executable: {exe_path}")
-    print(f"  Size:       {size_mb:.1f} MB")
+    if both:
+        print(f"  Onefile:    {os.path.join(DIST_DIR, 'Convertia.exe')}")
+        print(f"  Onedir:     {os.path.join(DIST_DIR, 'Convertia', 'Convertia.exe')}")
+    else:
+        print(f"  Executable: {last_exe}")
+    print(f"  Size:       {size_mb:.1f} MB (last target)")
     print("=" * 60)
-    print("  Share the whole dist/ folder (or Convertia.zip).")
+    print("  Share dist/Convertia.exe, dist/Convertia/, or Convertia.zip.")
     print("  Recipients: 64-bit Windows 10/11.")
     if make_zip:
         _zip_distribution()
@@ -232,12 +252,19 @@ def main() -> int:
         help="Build a folder distribution (more reliable on locked-down PCs)",
     )
     parser.add_argument(
+        "--both",
+        action="store_true",
+        help="Build onefile (dist/Convertia.exe) and onedir (dist/Convertia/) in one run",
+    )
+    parser.add_argument(
         "--zip",
         action="store_true",
         help="Create dist/Convertia.zip after building",
     )
     args = parser.parse_args()
-    return build(onedir=args.onedir, make_zip=args.zip)
+    if args.both and args.onedir:
+        parser.error("Use either --onedir or --both, not both flags together.")
+    return build(onedir=args.onedir, make_zip=args.zip, both=args.both)
 
 
 if __name__ == "__main__":

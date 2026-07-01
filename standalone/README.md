@@ -107,6 +107,27 @@ builds. All distributions share these behaviors (see also the main
 
 Regression tests: [`../tests/test_cdx_table8.py`](../tests/test_cdx_table8.py).
 
+## Relationship to `sdf_csv_converter`
+
+**`standalone/` does not contain a second copy of the converter.** At build time,
+PyInstaller freezes the [`sdf_csv_converter/`](../sdf_csv_converter/) package from
+the repository root into `Convertia.exe`. The standalone folder only provides the
+launcher (`app_entry.py`), console handling, and build specs.
+
+| Location | What it is |
+|----------|------------|
+| [`sdf_csv_converter/`](../sdf_csv_converter/) | **Source of truth** — edit Python here |
+| `standalone/dist/Convertia.exe` | Onefile build (GUI + CLI) |
+| `standalone/dist/Convertia/` | Onedir build (folder + `Convertia.exe`) |
+| ~~`standalone/Convertia/`~~ | **Obsolete** — do not use; removed on rebuild |
+
+Rebuild after changing `sdf_csv_converter`:
+
+```bash
+cd standalone
+python build_standalone.py --both    # onefile + onedir
+```
+
 ## Files
 
 ```
@@ -126,7 +147,10 @@ standalone/
     splash.png         PyInstaller splash
     logo.png           GUI header image
     image.png          Launch popup image
-  dist/                Build output (Convertia.exe, image.png, Convertia.zip)
+  dist/                Build output
+                         Convertia.exe      onefile (GUI + CLI)
+                         Convertia/         onedir folder build
+                         image.png, README.txt, Convertia.zip
   build/               PyInstaller work dir (safe to delete)
 ```
 
