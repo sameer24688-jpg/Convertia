@@ -11,18 +11,22 @@ Set CONVERTIA_PYTHON to force a specific Python interpreter for the build.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import shutil
 import subprocess
 import sys
 import zipfile
+from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 NA_ROOT = os.path.dirname(HERE)
+PKG_DIR = os.path.join(NA_ROOT, "sdf_csv_converter")
 DIST_DIR = os.path.join(HERE, "dist")
 BUILD_DIR = os.path.join(HERE, "build")
 ONEFILE_SPEC = os.path.join(HERE, "standalone.spec")
 ONEDIR_SPEC = os.path.join(HERE, "standalone_onedir.spec")
+STAMP_NAME = "SOURCE_STAMP.txt"
 
 
 def _is_store_python(exe: str) -> bool:
@@ -188,6 +192,95 @@ def _zip_distribution() -> str:
     return archive
 
 
+def _package_source_manifest() -> tuple[str, dict[str, str]]:
+    """Return (package version, relative_path -> sha256) for sdf_csv_converter sources."""
+    version = "unknown"
+    init_py = os.path.join(PKG_DIR, "__init__.py")
+    if os.path.isfile(init_py):
+        with open(init_py, encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip().startswith("__version__"):
+                    version = line.split("=", 1)[1].strip().strip("\"'")
+                    break
+
+    manifest: dict[str, str] = {}
+    for root, _dirs, files in os.walk(PKG_DIR):
+        if "dist" in root.split(os.sep) or "__pycache__" in root:
+            continue
+        for name in sorted(files):
+            if not name.endswith(".py"):
+                continue
+            path = os.path.join(root, name)
+            rel = os.path.relpath(path, NA_ROOT).replace("\\", "/")
+            digest = hashlib.sha256()
+            with open(path, "rb") as fh:
+                for chunk in iter(lambda: fh.read(65536), b""):
+                    digest.update(chunk)
+            manifest[rel] = digest.hexdigest()
+    return version, manifest
+
+
+def _format_source_stamp(version: str, manifest: dict[str, str]) -> str:
+    built = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    lines = [
+        "Convertia source stamp",
+        "======================",
+        f"Package version: {version}",
+        f"Built from:      {NA_ROOT}",
+        f"Build time:      {built}",
+        "",
+        "sdf_csv_converter is the single source of truth.",
+        "standalone/dist/* exes bundle this package at build time.",
+        "After editing sdf_csv_converter, rebuild:",
+        "  cd standalone && python build_standalone.py --both",
+        "",
+        "File SHA-256:",
+    ]
+    for rel, digest in sorted(manifest.items()):
+        lines.append(f"  {digest}  {rel}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _write_source_stamp(version: str, manifest: dict[str, str]) -> None:
+    text = _format_source_stamp(version, manifest)
+    for folder in (
+        DIST_DIR,
+        os.path.join(DIST_DIR, "Convertia"),
+    ):
+        if os.path.isdir(folder):
+            path = os.path.join(folder, STAMP_NAME)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(text)
+            print(f"  Source stamp: {path}")
+
+
+def _write_launcher_bats() -> None:
+    """Copy Windows launchers beside each distribution exe."""
+    pkg_bat = os.path.join(PKG_DIR, "Convertia.bat")
+    if os.path.isfile(pkg_bat):
+        dst = os.path.join(DIST_DIR, "Convertia.bat")
+        shutil.copy2(pkg_bat, dst)
+        print(f"  Launcher:    {dst}")
+
+    onedir = os.path.join(DIST_DIR, "Convertia")
+    if os.path.isdir(onedir):
+        bat = os.path.join(onedir, "Convertia.bat")
+        with open(bat, "w", encoding="utf-8", newline="\r\n") as fh:
+            fh.write(
+                "@echo off\r\n"
+                "setlocal\r\n"
+                'cd /d "%~dp0"\r\n'
+                'if "%~1"=="" (\r\n'
+                '  start "" "%~dp0Convertia.exe"\r\n'
+                ") else (\r\n"
+                '  "%~dp0Convertia.exe" %*\r\n'
+                "  if errorlevel 1 pause\r\n"
+                ")\r\n"
+            )
+        print(f"  Launcher:    {bat}")
+
+
 def build(*, onedir: bool, make_zip: bool, both: bool = False) -> int:
     python_exe = _select_python()
     print(f"Build Python: {python_exe}")
@@ -220,6 +313,9 @@ def build(*, onedir: bool, make_zip: bool, both: bool = False) -> int:
             return 1
 
     _copy_popup_image()
+    version, manifest = _package_source_manifest()
+    _write_source_stamp(version, manifest)
+    _write_launcher_bats()
     for exe_candidate in (
         os.path.join(DIST_DIR, "Convertia.exe"),
         os.path.join(DIST_DIR, "Convertia", "Convertia.exe"),

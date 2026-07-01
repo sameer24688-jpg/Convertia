@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- **GUI drag-and-drop input** — drop SDF, CSV, CDX, or CDXML onto the Convertia window (Windows, via `windnd`).
+
+### Fixed
+- **GUI crash on launch** — replaced a broken in-house `CallWindowProcW` hook that caused access violations and immediate exit on Windows.
+
 ### Changed
 - **Grouped CDXML structures.** ChemDraw often wraps each structure in a `<group>` under `<page>`. The parser now yields fragments inside page-level groups (in document order), not only direct `<page>` children — fixing plates like `test.cdxml` that previously exported a single row.
 - **Slimmer CSV output.** Removed `AtomLabels`, `NumRings`, `FractionCSP3`, and `MaxRingSize` columns; dropped the corresponding RDKit calculators.

@@ -8,7 +8,7 @@ Convert between SDF, CSV, CDX, and CDXML. **Chemical connectivity and ChemDraw m
 
 **Recommended (single combined app)** — double-click `standalone/dist/Convertia.exe` or share `standalone/dist/Convertia.zip`. The same file runs the CLI when launched from a terminal with arguments (stdout/stderr redirect supported). CDXML output includes per-structure **`Annotations`** / **`CompoundID`** (coordinate-assigned page text) and monotonic **`XmlIndex`** row ordering. See [Standalone combined .exe](#standalone-combined-exe), [`../standalone/README.md`](../standalone/README.md#conversion-fidelity), and [`../standalone/ARCHITECTURE.md`](../standalone/ARCHITECTURE.md).
 
-**GUI** — double-click `Convertia.exe` (or run `python -m sdf_csv_converter.gui` during development). Pick input file, choose **CSV** or **SDF** output format, set output path, then click **Convert**.
+**GUI** — double-click [`Convertia.bat`](Convertia.bat) in this folder (or `standalone/dist/Convertia.exe`). During development: `python -m sdf_csv_converter.gui`. **Drag and drop** an input file onto the window, or use **Browse…**; choose **CSV** or **SDF** output format, set the output path, then click **Convert**.
 
 **CLI** -- open a terminal and run:
 
@@ -156,6 +156,7 @@ sdf_csv_converter.exe data.csv -o data.sdf --strict
  +-- CLI (.exe) ----------------+  +-- GUI (.exe) -----------------+
  |  main.py                     |  |  gui.py                       |
  |    +-- cli.py (argparse)     |  |    +-- tkinter file pickers   |
+ |                              |  |    +-- drag-and-drop input  |
  |                              |  |         + options + log view  |
  +--------------+---------------+  +--------------+----------------+
                 |                                 |

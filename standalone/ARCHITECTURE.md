@@ -95,11 +95,13 @@ The desktop UI is a **tkinter** window with:
 
 | Area | Behavior |
 |------|----------|
-| Input | Browse SDF, CSV, CDX, or CDXML |
+| Input | **Drag and drop** SDF, CSV, CDX, or CDXML onto the window (Windows native), or **Browse…** |
 | Output format | **CSV** or **SDF** radio buttons (explicit choice) |
 | Output path | Browse save location; extension synced to selected format |
 | Convert | High-contrast teal action button |
 | Log | Dark terminal-style conversion output |
+
+Drag-and-drop uses the [`windnd`](https://pypi.org/project/windnd/) library (Windows `WM_DROPFILES` hook). Dropping multiple files uses the first supported extension; output path defaults beside the input file when empty.
 
 Conversion routing matches the CLI: input format from the file extension,
 output format from the **radio selection** (not inferred only from the path).

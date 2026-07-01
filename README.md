@@ -97,7 +97,7 @@ Build or download `standalone/dist/Convertia.zip` (or `Convertia.exe` + `image.p
 Convertia.exe input.cdxml -o output.csv
 ```
 
-The GUI lets you pick **CSV** or **SDF** output before converting.
+The GUI lets you pick **CSV** or **SDF** output before converting. **Drag and drop** input files onto the window, or use the file picker.
 
 See [`standalone/README.md`](standalone/README.md) for build instructions.
 

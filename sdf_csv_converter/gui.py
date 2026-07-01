@@ -3,7 +3,7 @@ GUI wrapper for sdf_csv_converter.
 Double-click to run — no command line needed.
 
 Provides:
-- File picker for input (SDF, CSV, CDX, CDXML)
+- File picker or drag-and-drop for input (SDF, CSV, CDX, CDXML)
 - File picker for output (automatically detected format)
 - Convert button with live progress output
 """
@@ -34,6 +34,7 @@ OUTPUT_EXTS = [
     ("SDF files", "*.sdf"),
     ("CSV files", "*.csv"),
 ]
+_SUPPORTED_INPUT_EXTS = {".sdf", ".csv", ".cdx", ".cdxml"}
 
 _APP_TITLE = "Convertia"
 
@@ -194,6 +195,18 @@ def _detect_format(path: str) -> str:
     return ext
 
 
+def _enable_windows_file_drop(widget: tk.Misc, callback) -> None:
+    """Register native Windows file drag-and-drop on the main Tk window."""
+    if sys.platform != "win32":
+        return
+    try:
+        import windnd
+
+        windnd.hook_dropfiles(widget.winfo_toplevel(), func=callback, force_unicode=True)
+    except Exception:
+        pass
+
+
 class ConverterGUI:
     _CONVERT_LABEL = "Convert"
 
@@ -226,12 +239,28 @@ class ConverterGUI:
         in_card = ttk.Frame(outer, style="Card.TFrame", padding=16)
         in_card.pack(fill=tk.X, pady=(0, 12))
         ttk.Label(in_card, text="Input file", style="Heading.TLabel").pack(anchor=tk.W)
+
+        self.drop_zone = tk.Label(
+            in_card,
+            text="Drag and drop a file here\n(SDF, CSV, CDX, or CDXML)",
+            bg="#f8fafc",
+            fg=_MUTED,
+            relief=tk.GROOVE,
+            borderwidth=2,
+            padx=12,
+            pady=14,
+            font=("Segoe UI", 9),
+            cursor="hand2",
+        )
+        self.drop_zone.pack(fill=tk.X, pady=(8, 0))
+        self.drop_zone.bind("<Button-1>", lambda _e: self._browse_input())
+
         in_frame = ttk.Frame(in_card, style="Card.TFrame")
-        in_frame.pack(fill=tk.X, pady=(8, 0))
+        in_frame.pack(fill=tk.X, pady=(10, 0))
         self.in_path = tk.StringVar()
         ttk.Entry(in_frame, textvariable=self.in_path).pack(side=tk.LEFT, fill=tk.X, expand=True)
         ttk.Button(in_frame, text="Browse…", command=self._browse_input).pack(side=tk.RIGHT, padx=(8, 0))
-        self.in_info = tk.StringVar(value="Select SDF, CSV, CDX, or CDXML")
+        self.in_info = tk.StringVar(value="Select SDF, CSV, CDX, or CDXML — or drag a file onto the window")
         ttk.Label(in_card, textvariable=self.in_info, style="Muted.TLabel").pack(anchor=tk.W, pady=(6, 0))
 
         # ── Output card ──
@@ -322,6 +351,14 @@ class ConverterGUI:
         )
         status_bar.pack(fill=tk.X)
 
+        root.after_idle(self._install_file_drop)
+
+    def _install_file_drop(self) -> None:
+        try:
+            _enable_windows_file_drop(self.root, self._on_files_dropped)
+        except Exception:
+            pass
+
     def _default_out_format_for_input(self, in_fmt: str) -> str:
         if in_fmt == "csv":
             return "sdf"
@@ -341,19 +378,56 @@ class ConverterGUI:
             self.out_format.set(fmt)
             self.out_info.set(f"Output format: {fmt.upper()}")
 
-    # ── File dialogs ──
+    # ── File dialogs & drag-and-drop ──
+    def _set_input_file(self, path: str) -> bool:
+        path = path.strip().strip('"')
+        if not path:
+            return False
+
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in _SUPPORTED_INPUT_EXTS:
+            return False
+        if not os.path.isfile(path):
+            messagebox.showerror("Error", f"Input file not found:\n{path}")
+            return False
+
+        self.in_path.set(path)
+        fmt = _detect_format(path)
+        self.in_info.set(f"Input format: {fmt.upper()}")
+        if fmt:
+            self.out_format.set(self._default_out_format_for_input(fmt))
+        if not self.out_path.get():
+            base, _ = os.path.splitext(path)
+            self.out_path.set(f"{base}.{self.out_format.get()}")
+        self._on_out_format_changed()
+        self.drop_zone.config(
+            text=f"Loaded: {os.path.basename(path)}",
+            fg=_TEXT,
+            bg="#ecfdf5",
+        )
+        return True
+
+    def _on_files_dropped(self, paths: list[str]) -> None:
+        for path in paths:
+            if self._set_input_file(path):
+                self.status.set(f"Loaded: {os.path.basename(path)}")
+                return
+        if len(paths) == 1:
+            ext = os.path.splitext(paths[0])[1].lower() or "(none)"
+            messagebox.showerror(
+                "Unsupported file",
+                f"Cannot use this file type: {ext}\n\nDrop SDF, CSV, CDX, or CDXML files.",
+            )
+        else:
+            messagebox.showerror(
+                "Unsupported files",
+                "None of the dropped files are supported.\n\nUse .sdf, .csv, .cdx, or .cdxml.",
+            )
+
     def _browse_input(self):
         path = filedialog.askopenfilename(title="Select input file", filetypes=INPUT_EXTS)
-        if path:
-            self.in_path.set(path)
-            fmt = _detect_format(path)
-            self.in_info.set(f"Input format: {fmt.upper()}" if fmt else "Unknown input format")
-            if fmt:
-                self.out_format.set(self._default_out_format_for_input(fmt))
-            if not self.out_path.get():
-                base, _ = os.path.splitext(path)
-                self.out_path.set(f"{base}.{self.out_format.get()}")
-            self._on_out_format_changed()
+        if path and self._set_input_file(path):
+            self.status.set(f"Loaded: {os.path.basename(path)}")
 
     def _browse_output(self):
         out_fmt = self.out_format.get()

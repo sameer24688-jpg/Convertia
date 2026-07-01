@@ -1,507 +1,1478 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Convertia — ChemDraw Plates to Analysis-Ready Data</title>
-<style>
-:root{--bg:#0a0e1a;--bg2:#0f1420;--teal:#00d4aa;--indigo:#818cf8;--amber:#fbbf24;--green:#34d399;--red:#f87171;--txt:#e2e8f0;--muted:#94a3b8;--dim:#64748b;--card:rgba(255,255,255,0.04);--bd:rgba(255,255,255,0.1);--bdh:rgba(0,212,170,0.4);--code:#0d1117;--r:12px;--rb:8px;--max:1200px;--f:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Roboto,sans-serif;--fm:'JetBrains Mono',Consolas,monospace}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:70px}
-body{font-family:var(--f);color:var(--txt);line-height:1.7;overflow-x:hidden;position:relative;background:var(--bg) url('Convertia.png') no-repeat center center fixed;background-size:cover}
-/* Light overlay for readability over background image */
-body::before{content:'';position:fixed;inset:0;background:linear-gradient(180deg,rgba(10,14,26,.75),rgba(10,14,26,.70));pointer-events:none;z-index:0}
-/* Subtle animated glow orbs */
-body::after{content:'';position:fixed;top:-20%;left:-10%;width:50%;height:60%;background:radial-gradient(circle,rgba(0,212,170,.06),transparent 70%);border-radius:50%;animation:orb1 20s ease-in-out infinite;pointer-events:none;z-index:0}
-@keyframes orb1{0%,100%{transform:translate(0,0)}50%{transform:translate(10%,15%)}}
-a{text-decoration:none;color:inherit}
-#sp{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--teal),var(--indigo));z-index:9999;box-shadow:0 0 10px var(--teal)}
-/* Back to top */
-#btt{position:fixed;bottom:2rem;right:2rem;width:44px;height:44px;border-radius:50%;background:var(--teal);color:#0a0e1a;border:none;cursor:pointer;font-size:1.2rem;z-index:999;opacity:0;transform:translateY(20px);transition:.3s;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,212,170,.4)}
-#btt.show{opacity:1;transform:translateY(0)}
-#btt:hover{transform:translateY(-3px);box-shadow:0 6px 25px rgba(0,212,170,.5)}
-nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,14,26,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
-.ni{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding:.8rem 2rem}
-.nl{display:flex;align-items:center;gap:.6rem;font-weight:700}
-.nl .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);box-shadow:0 0 12px var(--teal)}
-.nv{display:flex;gap:.5rem}
-.nv a{color:var(--muted);font-size:.9rem;padding:.4rem .8rem;border-radius:var(--rb);transition:.2s}
-.nv a:hover,.nv a.act{color:var(--teal);background:rgba(0,212,170,.08)}
-.nc{background:var(--teal);color:#0a0e1a;padding:.5rem 1.2rem;border-radius:var(--rb);font-weight:600}
-.nt{display:none;background:none;border:none;color:var(--txt);font-size:1.5rem}
-section{padding:5rem 2rem}
-.si{max-width:var(--max);margin:0 auto}
-.sl{color:var(--teal);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.15em;margin-bottom:.5rem}
-.st{font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;margin-bottom:1rem}
-.ss{color:var(--muted);font-size:1.1rem;max-width:700px;margin-bottom:2.5rem}
-.rv{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s}
-.rv.vis{opacity:1;transform:translateY(0)}
-.rd1{transition-delay:.1s}.rd2{transition-delay:.2s}.rd3{transition-delay:.3s}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertia — ChemDraw Plates to Analysis-Ready Data</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg-elevated: #111827;
+      --bg-card: #1a2332;
+      --bg-card-hover: #1f2937;
+      --border: #2d3a4f;
+      --border-accent: #14b8a6;
+      --text: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --teal: #2dd4bf;
+      --teal-dim: #14b8a6;
+      --indigo: #a5b4fc;
+      --amber: #fcd34d;
+      --green: #4ade80;
+      --red: #f87171;
+      --code-bg: #0d1117;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --max: 1120px;
+      --nav-h: 64px;
+      --font: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Inter, Roboto, sans-serif;
+      --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    }
 
-/* Hero */
-#hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:70px;background:radial-gradient(ellipse at 50% 30%,rgba(0,212,170,.08),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));position:relative}
-.hbg{position:absolute;inset:0;opacity:.05;pointer-events:none}
-.hbg svg{position:absolute;animation:drift 25s infinite}
-.hbg svg:nth-child(1){top:10%;left:5%}.hbg svg:nth-child(2){top:60%;right:5%;animation-delay:-8s}.hbg svg:nth-child(3){bottom:10%;left:20%;animation-delay:-15s}
-@keyframes drift{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(15px,-10px) rotate(180deg)}}
-.hc{position:relative;z-index:2;max-width:800px}
-.hl{width:110px;height:110px;margin:0 auto 1.5rem;border-radius:18px;overflow:hidden;box-shadow:0 0 40px rgba(0,212,170,.3);animation:float 6s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.hl img{width:100%;height:100%;object-fit:cover}
-.hc h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.1;margin-bottom:1rem}
-.hc h1 span{background:linear-gradient(135deg,var(--teal),var(--indigo));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s ease-in-out infinite}
-@keyframes shimmer{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
-.ht{font-size:clamp(1rem,2vw,1.3rem);color:var(--muted);margin-bottom:1.5rem}
-.hb{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem}
-.btn{padding:.8rem 1.8rem;border-radius:var(--rb);font-weight:600;transition:.2s;border:none;cursor:pointer;font-size:.95rem;position:relative;overflow:hidden}
-.bp{background:linear-gradient(135deg,var(--teal),#0fb89a);color:#0a0e1a}.bp:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,212,170,.4)}
-.bp::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .5s}
-.bp:hover::after{left:100%}
-.bs{background:rgba(255,255,255,.06);color:var(--txt);border:1px solid var(--bd)}.bs:hover{border-color:var(--teal);transform:translateY(-2px)}
-.hs{display:flex;gap:3rem;justify-content:center}
-.hsi .n{font-size:2.2rem;font-weight:700;color:var(--teal);text-shadow:0 0 20px rgba(0,212,170,.3)}.hsi .l{font-size:.8rem;color:var(--muted);text-transform:uppercase}
-/* Scroll indicator */
-.scroll-ind{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);color:var(--muted);font-size:.8rem;text-align:center;animation:bounce 2s infinite;z-index:2}
-.scroll-ind span{display:block;font-size:1.5rem;margin-top:.3rem}
-@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Cards */
-.pg,.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
-.pc,.fc{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:1.8rem;transition:.3s;position:relative;overflow:hidden}
-.pc::before,.fc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--teal),var(--indigo),transparent);opacity:0;transition:opacity .3s}
-.pc:hover,.fc:hover{transform:translateY(-4px);border-color:var(--bdh);box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 20px rgba(0,212,170,.1)}
-.pc:hover::before,.fc:hover::before{opacity:1}
-.ic{font-size:2rem;margin-bottom:.8rem;transition:transform .3s}
-.pc:hover .ic,.fc:hover .ic{transform:scale(1.15)}
-.fc h3{font-size:1.1rem;margin-bottom:.3rem}.fc .sub{color:var(--teal);font-family:var(--fm);font-size:.8rem;margin-bottom:.4rem}.fc p{color:var(--muted);font-size:.9rem}
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--nav-h) + 16px);
+    }
 
-/* Pipeline */
-.pipeline{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin:2rem 0}
-.pipe-stage{flex:1;min-width:200px;max-width:260px;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem;text-align:center;position:relative}
-.pipe-stage.act{border-color:var(--teal);box-shadow:0 0 25px var(--teal-d)}
-.pipe-stage .pic{font-size:2.2rem;margin-bottom:.5rem}
-.pipe-stage h4{font-size:1rem;margin-bottom:.3rem}
-.pipe-stage p{font-size:.8rem;color:var(--muted)}
-.pipe-arrow{display:flex;align-items:center;color:var(--teal);font-size:1.5rem}
-.particles{height:20px;position:relative;margin:.5rem 0;overflow:hidden}
-.particle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--teal);top:7px;left:-10px;animation:flow 2s linear infinite;box-shadow:0 0 8px var(--teal)}
-.particle:nth-child(2){animation-delay:.4s;background:var(--indigo);box-shadow:0 0 8px var(--indigo)}
-.particle:nth-child(3){animation-delay:.8s;background:var(--amber);box-shadow:0 0 8px var(--amber)}
-@keyframes flow{0%{left:-10px;opacity:0}10%{opacity:1}90%{opacity:1}100%{left:100%;opacity:0}}
+    body {
+      font-family: var(--font);
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
 
-/* Spreadsheet */
-.ssheet{margin:2rem auto;max-width:650px;border:1px solid var(--bd);border-radius:var(--rb);overflow:hidden;font-family:var(--fm);font-size:.75rem;box-shadow:0 4px 20px rgba(0,0,0,.2)}
-.ss-row{display:flex;transition:background .2s}.ss-row:not(.ss-head):hover{background:rgba(0,212,170,.05)}
-.ss-row div{flex:1;padding:.5rem .3rem;text-align:center;border-right:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ss-row div:last-child{border-right:none}.ss-row:last-child div{border-bottom:none}
-.ss-head{background:rgba(0,212,170,.1);color:var(--teal);font-weight:600}
+    a { color: var(--teal); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
-/* Tables */
-.cmp-wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r);margin:2rem 0}
-.cmp{width:100%;border-collapse:collapse;min-width:700px}
-.cmp th,.cmp td{padding:1rem;text-align:left;border-bottom:1px solid var(--bd);font-size:.9rem}
-.cmp th{background:rgba(0,212,170,.06);color:var(--teal);font-size:.75rem;text-transform:uppercase}
-.cmp tr:hover td{background:rgba(255,255,255,.03)}
-.cmp .col-c{background:rgba(0,212,170,.04)}
-.yes{color:var(--green)}.no{color:var(--red)}
+    code {
+      font-family: var(--mono);
+      font-size: 0.88em;
+      background: rgba(45, 212, 191, 0.12);
+      color: var(--teal);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+    }
 
-/* Conversions */
-.conv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem}
-.conv-card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem;text-align:center;cursor:pointer;transition:transform .3s,border-color .3s,box-shadow .3s}
-.conv-card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--teal);box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 15px rgba(0,212,170,.1)}
-.conv-in{font-family:var(--fm);color:var(--amber);font-weight:600;font-size:1.1rem;transition:text-shadow .3s}
-.conv-card:hover .conv-in{text-shadow:0 0 12px rgba(251,191,36,.5)}
-.conv-arrows{color:var(--teal);margin:.5rem 0;transition:letter-spacing .3s}
-.conv-card:hover .conv-arrows{letter-spacing:3px}
-.conv-out{display:inline-block;font-family:var(--fm);font-size:.8rem;padding:.3rem .7rem;border-radius:20px;background:rgba(0,212,170,.1);color:var(--teal);margin:.2rem;border:1px solid rgba(0,212,170,.2);transition:transform .2s}
-.conv-card:hover .conv-out{transform:scale(1.05)}
-.conv-note{font-size:.75rem;color:var(--dim);margin-top:.5rem}
+    /* Progress bar */
+    #scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--teal-dim), var(--indigo));
+      z-index: 2000;
+    }
 
-/* Tabs */
-.tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
-.tab{padding:.6rem 1.2rem;border-radius:var(--rb);background:var(--card);border:1px solid var(--bd);color:var(--muted);cursor:pointer;transition:.2s}
-.tab:hover{border-color:var(--bdh)}.tab.act{background:rgba(0,212,170,.1);border-color:var(--teal);color:var(--teal)}
-.tab-panel{display:none;animation:fade .3s}.tab-panel.act{display:block}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-.col-list{display:flex;flex-wrap:wrap;gap:.5rem}
-.col-item{font-family:var(--fm);font-size:.85rem;padding:.4rem .9rem;border-radius:var(--rb);border:1px solid var(--bd)}
-.col-meta{background:rgba(129,140,248,.1);border-color:rgba(129,140,248,.2);color:var(--indigo)}
-.col-rdkit{background:rgba(0,212,170,.1);border-color:rgba(0,212,170,.2);color:var(--teal)}
-.col-cd{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.2);color:var(--amber)}
+    /* Navigation */
+    .site-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-h);
+      z-index: 1000;
+      background: rgba(11, 17, 32, 0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
 
-/* Architecture */
-.arch{display:flex;flex-direction:column;align-items:center;gap:1rem}
-.arch-box{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:1.5rem 2rem;text-align:center;min-width:320px}
-.arch-box .lab{font-size:.75rem;color:var(--dim);text-transform:uppercase;letter-spacing:.1em}
-.arch-box .tit{font-weight:600}.arch-box .files{font-family:var(--fm);font-size:.8rem;color:var(--muted);margin-top:.3rem}
-.arch-core{border-color:rgba(0,212,170,.3);background:rgba(0,212,170,.04)}
-.arch-arrow{color:var(--teal);font-size:1.5rem}
-.arch-mods{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-top:1rem;text-align:center}
-.arch-mod{font-family:var(--fm);font-size:.75rem;padding:.5rem;background:rgba(0,0,0,.2);border:1px solid var(--bd);border-radius:var(--rb)}
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      height: 100%;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
 
-/* CLI */
-.cli{background:var(--code);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin:2rem 0}
-.cli-head{display:flex;justify-content:space-between;align-items:center;padding:.7rem 1rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--bd)}
-.cli-dots{display:flex;gap:.4rem}.cli-dots span{width:10px;height:10px;border-radius:50%}.cli-dots span:nth-child(1){background:var(--red)}.cli-dots span:nth-child(2){background:var(--amber)}.cli-dots span:nth-child(3){background:var(--green)}
-.cli-copy{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.2);color:var(--teal);padding:.3rem .8rem;border-radius:var(--rb);cursor:pointer;font-size:.8rem}
-.cli-copy:hover{background:rgba(0,212,170,.2)}.cli-copy.copied{background:var(--green);color:#0a0e1a;border-color:var(--green)}
-.cli-code{padding:1.2rem;font-family:var(--fm);font-size:.85rem;line-height:1.8;overflow-x:auto}
-.cli-code .p{color:var(--teal)}.cli-code .f{color:var(--indigo)}.cli-code .c{color:var(--dim)}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+      text-decoration: none;
+    }
 
-/* Limitations */
-.lim-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem}
-.lim-item{display:flex;gap:.8rem;padding:1rem;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);font-size:.9rem}
-.lim-tag{font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:4px;text-transform:uppercase;white-space:nowrap;height:fit-content}
-.lim-crit{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
-.lim-high{background:rgba(251,191,36,.15);color:var(--amber);border:1px solid rgba(251,191,36,.3)}
-.lim-med{background:rgba(129,140,248,.15);color:var(--indigo);border:1px solid rgba(129,140,248,.3)}
+    .brand:hover { text-decoration: none; }
 
-/* Footer */
-footer{padding:3rem 2rem;text-align:center;color:var(--muted);font-size:.9rem;border-top:1px solid var(--bd)}
-footer a{color:var(--teal)}
+    .brand-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 10px var(--teal);
+    }
 
-@media(max-width:768px){
-  .nv{display:none;position:absolute;top:60px;left:0;right:0;background:var(--bg);flex-direction:column;padding:1rem;border-bottom:1px solid var(--bd)}
-  .nv.open{display:flex}.nt{display:block}
-  .hs{gap:1.5rem}.pipe-arrow{transform:rotate(90deg)}
-}
-</style>
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--teal);
+      background: rgba(45, 212, 191, 0.08);
+      text-decoration: none;
+    }
+
+    .nav-cta {
+      background: var(--teal-dim) !important;
+      color: #042f2e !important;
+      font-weight: 600;
+      margin-left: 0.25rem;
+    }
+
+    .nav-cta:hover {
+      background: var(--teal) !important;
+      color: #042f2e !important;
+    }
+
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 1.25rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+    }
+
+    /* Layout */
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      padding: 5rem 0;
+    }
+
+    section.alt {
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 1rem;
+      max-width: 42rem;
+    }
+
+    .section-lead {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 40rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Hero */
+    .hero {
+      padding-top: calc(var(--nav-h) + 4rem);
+      padding-bottom: 5rem;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(20, 184, 166, 0.15), transparent),
+        var(--bg);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-tagline {
+      font-size: 1rem;
+      color: var(--teal);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4.5vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--teal);
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      max-width: 34rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--teal-dim);
+      color: #042f2e;
+      box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: var(--teal);
+      color: #042f2e;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--teal-dim);
+      color: var(--text);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--teal);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.35rem;
+    }
+
+    .hero-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .deploy-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .deploy-list li {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+    }
+
+    .deploy-list strong { color: var(--text); }
+
+    .deploy-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(45, 212, 191, 0.12);
+      color: var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: #3d4f66;
+    }
+
+    .card-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.75rem;
+      line-height: 1;
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .card .card-sub {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .pipe-step {
+      flex: 1 1 180px;
+      max-width: 220px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1rem;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .pipe-step.active {
+      border-color: var(--teal-dim);
+      box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.25);
+    }
+
+    .pipe-step .emoji { font-size: 1.75rem; margin-bottom: 0.5rem; }
+
+    .pipe-step h4 {
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+
+    .pipe-step p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .pipe-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--teal);
+      font-size: 1.25rem;
+      padding: 0 0.25rem;
+    }
+
+    /* Spreadsheet preview */
+    .spreadsheet {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      background: var(--code-bg);
+    }
+
+    .spreadsheet-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .spreadsheet-row > div {
+      padding: 0.55rem 0.4rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-secondary);
+    }
+
+    .spreadsheet-row > div:last-child { border-right: none; }
+    .spreadsheet-row:last-child > div { border-bottom: none; }
+
+    .spreadsheet-head {
+      background: rgba(20, 184, 166, 0.15);
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    /* Comparison table */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+    }
+
+    table.compare {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 0.9rem;
+    }
+
+    table.compare th,
+    table.compare td {
+      padding: 0.9rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    table.compare th {
+      background: rgba(20, 184, 166, 0.1);
+      color: var(--teal);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    table.compare tr:last-child td { border-bottom: none; }
+
+    table.compare td:first-child {
+      font-weight: 500;
+      color: var(--text);
+      width: 22%;
+    }
+
+    table.compare td:nth-child(2) { color: var(--red); }
+    table.compare td:nth-child(3) {
+      color: var(--green);
+      background: rgba(74, 222, 128, 0.04);
+    }
+
+    /* Conversion grid */
+    .conv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .conv-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .conv-card:hover { border-color: var(--teal-dim); }
+
+    .conv-in {
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--amber);
+    }
+
+    .conv-arrow {
+      color: var(--teal);
+      margin: 0.6rem 0;
+      letter-spacing: 2px;
+    }
+
+    .conv-out {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(20, 184, 166, 0.12);
+      color: var(--teal);
+      border: 1px solid rgba(20, 184, 166, 0.25);
+      margin: 0.15rem;
+    }
+
+    .conv-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.6rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tab-btn {
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover { border-color: #3d4f66; color: var(--text-secondary); }
+
+    .tab-btn.active {
+      background: rgba(20, 184, 166, 0.12);
+      border-color: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .chip-meta { background: rgba(165, 180, 252, 0.1); border-color: rgba(165, 180, 252, 0.25); color: var(--indigo); }
+    .chip-rdkit { background: rgba(20, 184, 166, 0.1); border-color: rgba(20, 184, 166, 0.25); color: var(--teal); }
+    .chip-cd { background: rgba(252, 211, 77, 0.1); border-color: rgba(252, 211, 77, 0.25); color: var(--amber); }
+
+    /* Architecture */
+    .arch-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .arch-box {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+
+    .arch-box.core {
+      border-color: rgba(20, 184, 166, 0.35);
+      background: rgba(20, 184, 166, 0.06);
+    }
+
+    .arch-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .arch-title {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1.05rem;
+    }
+
+    .arch-files {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    .arch-arrow { color: var(--teal); font-size: 1.25rem; }
+
+    .arch-modules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      text-align: left;
+    }
+
+    .arch-mod {
+      font-size: 0.78rem;
+      padding: 0.55rem 0.65rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+    }
+
+    .arch-mod strong {
+      display: block;
+      font-family: var(--mono);
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      margin-bottom: 0.15rem;
+    }
+
+    /* CLI block */
+    .terminal {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--code-bg);
+    }
+
+    .terminal-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 1rem;
+      background: #161b22;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .terminal-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dots span:nth-child(1) { background: var(--red); }
+    .terminal-dots span:nth-child(2) { background: var(--amber); }
+    .terminal-dots span:nth-child(3) { background: var(--green); }
+
+    .copy-btn {
+      background: rgba(20, 184, 166, 0.12);
+      border: 1px solid rgba(20, 184, 166, 0.3);
+      color: var(--teal);
+      padding: 0.3rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .copy-btn.copied {
+      background: var(--green);
+      color: #052e16;
+      border-color: var(--green);
+    }
+
+    .terminal-body {
+      padding: 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.9;
+      overflow-x: auto;
+      color: var(--text-secondary);
+    }
+
+    .terminal-body .prompt { color: var(--teal); }
+    .terminal-body .flag { color: var(--indigo); }
+    .terminal-body .comment { color: var(--text-muted); }
+
+    /* Limitations */
+    .lim-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .lim-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem 1.15rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .lim-tag {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      height: fit-content;
+      margin-top: 0.1rem;
+    }
+
+    .lim-crit { background: rgba(248, 113, 113, 0.15); color: var(--red); border: 1px solid rgba(248, 113, 113, 0.3); }
+    .lim-high { background: rgba(252, 211, 77, 0.12); color: var(--amber); border: 1px solid rgba(252, 211, 77, 0.3); }
+    .lim-med { background: rgba(165, 180, 252, 0.12); color: var(--indigo); border: 1px solid rgba(165, 180, 252, 0.3); }
+
+    /* Footer */
+    .site-footer {
+      padding: 3rem 0;
+      background: #070b14;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .site-footer p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .site-footer .footer-title {
+      color: var(--text);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-links {
+      margin: 0.75rem 0 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--teal);
+      margin: 0 0.35rem;
+    }
+
+    .footer-credit {
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .footer-credit .author {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Back to top */
+    #back-to-top {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--teal-dim);
+      color: #042f2e;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 900;
+    }
+
+    #back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-panel { order: -1; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-toggle { display: block; }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: var(--nav-h);
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-links.open { display: flex; }
+
+      .pipe-arrow { transform: rotate(90deg); justify-content: center; width: 100%; }
+      .spreadsheet-row { grid-template-columns: repeat(4, 1fr); }
+      .spreadsheet-row > div:nth-child(n+5) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
 </head>
 <body>
-<div id="sp"></div>
-<nav>
-  <div class="ni">
-    <div class="nl"><span class="dot"></span>Convertia</div>
-    <button class="nt" onclick="document.querySelector('.nv').classList.toggle('open')">☰</button>
-    <div class="nv">
+
+<div id="scroll-progress"></div>
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-dot"></span>
+      Convertia
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+    <nav class="nav-links">
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
       <a href="#compare">Compare</a>
-      <a href="#convert">Convert</a>
+      <a href="#convert">Formats</a>
       <a href="#cli">CLI</a>
       <a href="#limits">Limitations</a>
       <a href="#license">License</a>
-      <a class="nc" href="https://github.com/sameer24688-jpg/Convertia" target="_blank">GitHub</a>
-    </div>
+      <a class="nav-cta" href="https://github.com/sameer24688-jpg/Convertia" target="_blank" rel="noopener">GitHub</a>
+    </nav>
   </div>
-</nav>
+</header>
 
-<section id="hero">
-  <div class="hbg">
-    <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="20" r="4" fill="var(--teal)"/><circle cx="20" cy="50" r="4" fill="var(--teal)"/><circle cx="60" cy="50" r="4" fill="var(--teal)"/><line x1="40" y1="20" x2="20" y2="50" stroke="var(--teal)" stroke-width="1.5"/><line x1="40" y1="20" x2="60" y2="50" stroke="var(--teal)" stroke-width="1.5"/><line x1="20" y1="50" x2="60" y2="50" stroke="var(--teal)" stroke-width="1.5"/></svg>
-    <svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="25" r="4" fill="var(--indigo)"/><circle cx="25" cy="60" r="4" fill="var(--indigo)"/><circle cx="75" cy="60" r="4" fill="var(--indigo)"/><circle cx="50" cy="85" r="4" fill="var(--indigo)"/><line x1="50" y1="25" x2="25" y2="60" stroke="var(--indigo)" stroke-width="1.5"/><line x1="50" y1="25" x2="75" y2="60" stroke="var(--indigo)" stroke-width="1.5"/><line x1="25" y1="60" x2="50" y2="85" stroke="var(--indigo)" stroke-width="1.5"/><line x1="75" y1="60" x2="50" y2="85" stroke="var(--indigo)" stroke-width="1.5"/></svg>
-    <svg width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="15" r="3" fill="var(--teal)"/><circle cx="15" cy="35" r="3" fill="var(--teal)"/><circle cx="45" cy="35" r="3" fill="var(--teal)"/><circle cx="30" cy="50" r="3" fill="var(--teal)"/><line x1="30" y1="15" x2="15" y2="35" stroke="var(--teal)" stroke-width="1"/><line x1="30" y1="15" x2="45" y2="35" stroke="var(--teal)" stroke-width="1"/><line x1="15" y1="35" x2="30" y2="50" stroke="var(--teal)" stroke-width="1"/><line x1="45" y1="35" x2="30" y2="50" stroke="var(--teal)" stroke-width="1"/></svg>
-  </div>
-  <div class="hc">
-    <div class="hl"><img src="Convertia.png" alt="Convertia logo"></div>
-    <p class="ht">Stop losing your structural metadata.</p>
-    <h1>Convertia turns <span>ChemDraw plates</span> into analysis-ready datasets.</h1>
-    <p class="ht">A zero-install utility for medicinal chemists and data curators. Parse CDXML, CDX, SDF, and CSV — and emit clean CSV or SDF files enriched with computed descriptors.</p>
-    <div class="hb">
-      <a class="btn bp" href="#features">Explore Features</a>
-      <a class="btn bs" href="#cli">See CLI Examples</a>
-    </div>
-    <div class="hs">
-      <div class="hsi"><div class="n" data-count="4">0</div><div class="l">Input Formats</div></div>
-      <div class="hsi"><div class="n" data-count="10">0</div><div class="l">Descriptors</div></div>
-      <div class="hsi"><div class="n" data-count="1">0</div><div class="l">Portable EXE</div></div>
-    </div>
-  </div>
-  <div class="scroll-ind">Scroll to explore<span>↓</span></div>
-</section>
+<main id="top">
 
-<section id="problem">
-  <div class="si rv">
-    <div class="sl">The Problem</div>
-    <h2 class="st">Generic converters treat ChemDraw exports as plain molecular files.</h2>
-    <p class="ss">That strips the very context medicinal chemists need: plate labels, custom text, abbreviations, and drawing order.</p>
-    <div class="pg">
-      <div class="pc rv rd1"><div class="ic">🗂️</div><h3>Stripped Metadata</h3><p>Plate context, compound IDs, and annotations are lost or duplicated across every row.</p></div>
-      <div class="pc rv rd2"><div class="ic">🧪</div><h3>Lost Chemistry</h3><p>Abbreviations like OMe and Ph become placeholder atoms; R-groups are dropped or inconsistent.</p></div>
-      <div class="pc rv rd3"><div class="ic">🐌</div><h3>Manual Cleanup</h3><p>You end up re-entering names, IDs, and properties into Excel by hand.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="features">
-  <div class="si">
-    <div class="sl rv">The Solution</div>
-    <h2 class="st rv">Built for SAR plates, compound libraries, and annotated screens.</h2>
-    <p class="ss rv">Convertia preserves the chemistry as drawn and enriches it with RDKit descriptors and JPLogP lipophilicity.</p>
-    <div class="fg">
-      <div class="fc rv rd1"><div class="ic">🏷️</div><h3>Plate Context Preserved</h3><div class="sub">CompoundID · Annotations · Title</div><p>Coordinate-based labels map to the nearest structure. IUPAC names link via ChemDraw <code>chemicalproperty</code>.</p></div>
-      <div class="fc rv rd2"><div class="ic">⚗️</div><h3>Abbreviation Expansion</h3><div class="sub">OMe · Ph · Boc → real atoms</div><p>ChemDraw's embedded fragments are flattened into the parent structure, so formulas and SMILES are correct.</p></div>
-      <div class="fc rv rd3"><div class="ic">🔗</div><h3>R-Group Handling</h3><div class="sub">R1 · R2 → [*:1] · [*:2]</div><p>Generic nicknames become RDKit dummy atoms with atom-map numbers in canonical SMILES.</p></div>
-      <div class="fc rv rd1"><div class="ic">📊</div><h3>Dual-Namespace Properties</h3><div class="sub">ChemDraw_* vs RDKit columns</div><p>ChemDraw values are prefixed so they can never overwrite computed MolecularWeight, CLogP, or TPSA.</p></div>
-      <div class="fc rv rd2"><div class="ic">📋</div><h3>Document Order Locked</h3><div class="sub">XmlIndex 0..N−1</div><p>Every row carries a monotonic index matching the original drawing layout, even if downstream tools re-sort.</p></div>
-      <div class="fc rv rd3"><div class="ic">🧬</div><h3>Batch Descriptors</h3><div class="sub">CLogP · MW · TPSA · HBD/HBA</div><p>Built-in RDKit/JPLogP computation: SMILES, formula, CLogP, TPSA, HBD, HBA, rotatable bonds, stereocenters.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="how">
-  <div class="si">
-    <div class="sl rv">How It Works</div>
-    <h2 class="st rv">From ChemDraw plate to analysis-ready CSV.</h2>
-    <p class="ss rv">A single-threaded parse preserves order while RDKit enriches each structure with computed properties.</p>
-    <div class="pipeline rv">
-      <div class="pipe-stage act">
-        <div class="pic">📄</div>
-        <h4>CDXML Plate</h4>
-        <p>Page-level fragments and groups in document order</p>
-        <div class="particles"><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="hero-logo">
+          <img src="Convertia.png" alt="Convertia logo">
+        </div>
+        <p class="hero-tagline">Stop losing your structural metadata.</p>
+        <h1>Convertia turns <em>ChemDraw plates</em> into analysis-ready datasets.</h1>
+        <p class="hero-desc">
+          A zero-install utility for medicinal chemists and data curators. Parse CDXML, CDX, SDF, and CSV — and emit clean CSV or SDF files enriched with computed descriptors.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#features">Explore features</a>
+          <a class="btn btn-secondary" href="#cli">CLI examples</a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="stat-num" data-count="4">0</div>
+            <div class="stat-label">Input formats</div>
+          </div>
+          <div>
+            <div class="stat-num" data-count="10">0</div>
+            <div class="stat-label">Descriptors</div>
+          </div>
+          <div>
+            <div class="stat-num" data-count="1">0</div>
+            <div class="stat-label">Portable EXE</div>
+          </div>
+        </div>
       </div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-stage">
-        <div class="pic">🔍</div>
-        <h4>CDXML Parser</h4>
-        <p>Expand nicknames, assign labels, resolve R-groups</p>
-        <div class="particles"><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
-      </div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-stage">
-        <div class="pic">⚙️</div>
-        <h4>RDKit + JPLogP</h4>
-        <p>Compute SMILES, MW, formula, CLogP, TPSA...</p>
-        <div class="particles"><div class="particle"></div><div class="particle"></div><div class="particle"></div></div>
-      </div>
-      <div class="pipe-arrow">→</div>
-      <div class="pipe-stage">
-        <div class="pic">📊</div>
-        <h4>CSV / SDF Output</h4>
-        <p>Metadata first, then descriptors, then ChemDraw_*</p>
+      <aside class="hero-panel reveal">
+        <h3>Zero-configuration deployment</h3>
+        <ul class="deploy-list">
+          <li>
+            <span class="deploy-icon">▶</span>
+            <span><strong>End users:</strong> one portable Windows executable (~66 MB). Double-click for GUI (drag-and-drop input) or run from terminal — no Python install.</span>
+          </li>
+          <li>
+            <span class="deploy-icon">⚙</span>
+            <span><strong>Developers:</strong> <code>pip install -r sdf_csv_converter/requirements.txt</code> then <code>python -m sdf_csv_converter input.cdxml -o out.csv</code></span>
+          </li>
+          <li>
+            <span class="deploy-icon">📦</span>
+            <span><strong>Distribution:</strong> share <code>standalone/dist/Convertia.zip</code> or <code>Convertia.exe</code> + <code>image.png</code></span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section id="problem" class="alt">
+    <div class="container reveal">
+      <span class="section-label">The problem</span>
+      <h2 class="section-title">Generic converters treat ChemDraw exports as plain molecular files.</h2>
+      <p class="section-lead">That strips the very context medicinal chemists need: plate labels, custom text, abbreviations, and drawing order.</p>
+      <div class="card-grid">
+        <article class="card">
+          <div class="card-icon">🗂️</div>
+          <h3>Stripped metadata</h3>
+          <p>Plate context, compound IDs, and annotations are lost or duplicated across every row.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🧪</div>
+          <h3>Lost chemistry</h3>
+          <p>Abbreviations like OMe and Ph become placeholder atoms; R-groups are dropped or inconsistent.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🐌</div>
+          <h3>Manual cleanup</h3>
+          <p>You end up re-entering names, IDs, and properties into Excel by hand.</p>
+        </article>
       </div>
     </div>
-    <div class="ssheet rv">
-      <div class="ss-row ss-head"><div>XmlIndex</div><div>Title</div><div>CompoundID</div><div>SMILES</div><div>MW</div><div>CLogP</div><div>ChemDraw_LogP</div></div>
-      <div class="ss-row"><div>0</div><div>Compound A</div><div>PROJ-42</div><div>c1ccccc1</div><div>78.11</div><div>2.13</div><div>2.10</div></div>
-      <div class="ss-row"><div>1</div><div>Compound B</div><div>PROJ-43</div><div>CCO</div><div>46.07</div><div>-0.14</div><div>-0.10</div></div>
-      <div class="ss-row"><div>2</div><div>Compound C</div><div>PROJ-44</div><div>c1ccccc1O</div><div>94.11</div><div>1.46</div><div>1.50</div></div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<section id="compare">
-  <div class="si">
-    <div class="sl rv">Compared to Generic Tools</div>
-    <h2 class="st rv">What generic converters miss, Convertia keeps.</h2>
-    <div class="cmp-wrap rv">
-      <table class="cmp">
-        <thead><tr><th>Capability</th><th>Generic Tools</th><th class="col-c">Convertia</th></tr></thead>
-        <tbody>
-          <tr><td>ChemDraw CDXML plates</td><td class="no">Often miss grouped structures, page text, and property links</td><td class="col-c yes">Native CDXML parser; walks <group> fragments in document order</td></tr>
-          <tr><td>Compound names (IUPAC captions)</td><td class="no">Usually lost</td><td class="col-c yes">Read via ChemDraw <code>chemicalproperty</code> / BasisObjects → Title column</td></tr>
-          <tr><td>Plate labels (IDs, notes)</td><td class="no">Not assigned per structure</td><td class="col-c yes">CompoundID and Annotations via spatial proximity</td></tr>
-          <tr><td>Abbreviations (OMe, Ph, Boc...)</td><td class="no">Often a single placeholder atom</td><td class="col-c yes">Expanded from ChemDraw's embedded fragment → correct formula & SMILES</td></tr>
-          <tr><td>R-groups (R1, R2...)</td><td class="no">Inconsistent or dropped</td><td class="col-c yes">Dummy atoms with map numbers ([*:1]) in SMILES</td></tr>
-          <tr><td>Row order on dense plates</td><td class="no">Undefined or re-sorted</td><td class="col-c yes">Monotonic XmlIndex (0..N−1) matches the drawing</td></tr>
-          <tr><td>ChemDraw vs computed properties</td><td class="no">Can overwrite each other</td><td class="col-c yes">Separate namespaces: ChemDraw_* vs RDKit columns</td></tr>
-          <tr><td>Batch descriptors</td><td class="no">Requires a separate workflow</td><td class="col-c yes">Built-in: SMILES, MW, formula, CLogP, TPSA, HBD/HBA, rotatable bonds, stereocenters</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<section id="convert">
-  <div class="si">
-    <div class="sl rv">Supported Conversions</div>
-    <h2 class="st rv">One engine, four input formats.</h2>
-    <p class="ss rv">Convertia handles SDF↔CSV and ChemDraw CDXML/CDX → SDF/CSV. CDX requires OpenBabel; CDXML does not.</p>
-    <div class="conv-grid">
-      <div class="conv-card rv rd1"><div class="conv-in">CDXML</div><div class="conv-arrows">→ → →</div><div class="conv-outputs"><span class="conv-out">SDF</span><span class="conv-out">CSV</span></div></div>
-      <div class="conv-card rv rd2"><div class="conv-in">CDX</div><div class="conv-arrows">→ → →</div><div class="conv-outputs"><span class="conv-out">SDF</span><span class="conv-out">CSV</span></div><div class="conv-note">Requires OpenBabel</div></div>
-      <div class="conv-card rv rd3"><div class="conv-in">SDF</div><div class="conv-arrows">→ → →</div><div class="conv-outputs"><span class="conv-out">CSV</span></div></div>
-      <div class="conv-card rv rd1"><div class="conv-in">CSV</div><div class="conv-arrows">→ → →</div><div class="conv-outputs"><span class="conv-out">SDF</span></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="columns">
-  <div class="si">
-    <div class="sl rv">Output Columns</div>
-    <h2 class="st rv">Two namespaces, one clean row.</h2>
-    <p class="ss rv">Properties are grouped by source so nothing is silently overwritten.</p>
-    <div class="tabs rv">
-      <div class="tab act" data-tab="meta">Metadata</div>
-      <div class="tab" data-tab="rdkit">RDKit Computed</div>
-      <div class="tab" data-tab="chemdraw">ChemDraw_*</div>
-    </div>
-    <div class="tab-panel act" id="panel-meta">
-      <p class="ss">Parser metadata appears first in every row.</p>
-      <div class="col-list"><span class="col-item col-meta">XmlIndex</span><span class="col-item col-meta">Title</span><span class="col-item col-meta">CompoundID</span><span class="col-item col-meta">Annotations</span></div>
-    </div>
-    <div class="tab-panel" id="panel-rdkit">
-      <p class="ss">Standard RDKit descriptors, with CLogP computed by JPLogP (not Wildman–Crippen MolLogP).</p>
-      <div class="col-list"><span class="col-item col-rdkit">SMILES</span><span class="col-item col-rdkit">MolecularWeight</span><span class="col-item col-rdkit">Formula</span><span class="col-item col-rdkit">CLogP</span><span class="col-item col-rdkit">TPSA</span><span class="col-item col-rdkit">NumHAcceptors</span><span class="col-item col-rdkit">NumHDonors</span><span class="col-item col-rdkit">NumRotatableBonds</span><span class="col-item col-rdkit">NumHeavyAtoms</span><span class="col-item col-rdkit">NumStereoCenters</span></div>
-    </div>
-    <div class="tab-panel" id="panel-chemdraw">
-      <p class="ss">ChemDraw properties keep the ChemDraw_ prefix. Empty label templates are dropped.</p>
-      <div class="col-list"><span class="col-item col-cd">ChemDraw_LogP</span><span class="col-item col-cd">ChemDraw_MeltingPoint</span><span class="col-item col-cd">ChemDraw_MolecularWeight</span><span class="col-item col-cd">...any ChemDraw ChemProp</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="architecture">
-  <div class="si">
-    <div class="sl rv">Architecture</div>
-    <h2 class="st rv">A thin standalone shell around a core engine.</h2>
-    <p class="ss rv">The combined Convertia.exe does not duplicate conversion logic — it imports the same package used by the Python CLI.</p>
-    <div class="arch rv">
-      <div class="arch-box">
-        <div class="lab">Standalone Launcher</div>
-        <div class="tit">Convertia.exe</div>
-        <div class="files">app_entry.py · win_console.py · startup_errors.py</div>
+  <section id="features">
+    <div class="container reveal">
+      <span class="section-label">The solution</span>
+      <h2 class="section-title">Built for SAR plates, compound libraries, and annotated screens.</h2>
+      <p class="section-lead">Convertia preserves the chemistry as drawn and enriches it with RDKit descriptors and JPLogP lipophilicity.</p>
+      <div class="card-grid">
+        <article class="card">
+          <div class="card-icon">🖱️</div>
+          <h3>Drag-and-drop GUI</h3>
+          <div class="card-sub">Drop · Browse · Convert</div>
+          <p>Drop SDF, CSV, CDX, or CDXML onto the window — output path and format are filled in automatically. Same portable <code>Convertia.exe</code> for GUI and CLI.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🏷️</div>
+          <h3>Plate context preserved</h3>
+          <div class="card-sub">CompoundID · Annotations · Title</div>
+          <p>Coordinate-based labels map to the nearest structure. IUPAC names link via ChemDraw <code>chemicalproperty</code>.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">⚗️</div>
+          <h3>Abbreviation expansion</h3>
+          <div class="card-sub">OMe · Ph · Boc → real atoms</div>
+          <p>ChemDraw's embedded fragments are flattened into the parent structure, so formulas and SMILES are correct.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🔗</div>
+          <h3>R-group handling</h3>
+          <div class="card-sub">R1 · R2 → [*:1] · [*:2]</div>
+          <p>Generic nicknames become RDKit dummy atoms with atom-map numbers in canonical SMILES.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">📊</div>
+          <h3>Dual-namespace properties</h3>
+          <div class="card-sub">ChemDraw_* vs RDKit columns</div>
+          <p>ChemDraw values are prefixed so they can never overwrite computed MolecularWeight, CLogP, or TPSA.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">📋</div>
+          <h3>Document order locked</h3>
+          <div class="card-sub">XmlIndex 0..N−1</div>
+          <p>Every row carries a monotonic index matching the original drawing layout, even if downstream tools re-sort.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🧬</div>
+          <h3>Batch descriptors</h3>
+          <div class="card-sub">CLogP · MW · TPSA · HBD/HBA</div>
+          <p>Built-in RDKit/JPLogP computation: SMILES, formula, CLogP, TPSA, HBD, HBA, rotatable bonds, stereocenters.</p>
+        </article>
       </div>
-      <div class="arch-arrow">↓</div>
-      <div class="arch-box arch-core">
-        <div class="lab">Core Conversion Engine</div>
-        <div class="tit">sdf_csv_converter package</div>
-        <div class="arch-mods">
-          <div class="arch-mod"><strong>cdx_parser.py</strong>CDXML/CDX parse</div>
-          <div class="arch-mod"><strong>molecule_processor.py</strong>RDKit descriptors</div>
-          <div class="arch-mod"><strong>clogp.py</strong>JPLogP CLogP</div>
-          <div class="arch-mod"><strong>sdf_to_csv.py</strong>SDF ↔ CSV</div>
+    </div>
+  </section>
+
+  <section id="how" class="alt">
+    <div class="container reveal">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">From ChemDraw plate to analysis-ready CSV.</h2>
+      <p class="section-lead">A single-threaded parse preserves order while RDKit enriches each structure with computed properties.</p>
+
+      <div class="pipeline">
+        <div class="pipe-step active">
+          <div class="emoji">📄</div>
+          <h4>CDXML plate</h4>
+          <p>Page-level fragments and groups in document order</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="emoji">🔍</div>
+          <h4>CDXML parser</h4>
+          <p>Expand nicknames, assign labels, resolve R-groups</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="emoji">⚙️</div>
+          <h4>RDKit + JPLogP</h4>
+          <p>Compute SMILES, MW, formula, CLogP, TPSA…</p>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-step">
+          <div class="emoji">📊</div>
+          <h4>CSV / SDF output</h4>
+          <p>Metadata first, then descriptors, then ChemDraw_*</p>
+        </div>
+      </div>
+
+      <div class="spreadsheet">
+        <div class="spreadsheet-row spreadsheet-head">
+          <div>XmlIndex</div><div>Title</div><div>CompoundID</div><div>SMILES</div><div>MW</div><div>CLogP</div><div>ChemDraw_LogP</div>
+        </div>
+        <div class="spreadsheet-row">
+          <div>0</div><div>Compound A</div><div>PROJ-42</div><div>c1ccccc1</div><div>78.11</div><div>2.13</div><div>2.10</div>
+        </div>
+        <div class="spreadsheet-row">
+          <div>1</div><div>Compound B</div><div>PROJ-43</div><div>CCO</div><div>46.07</div><div>-0.14</div><div>-0.10</div>
+        </div>
+        <div class="spreadsheet-row">
+          <div>2</div><div>Compound C</div><div>PROJ-44</div><div>c1ccccc1O</div><div>94.11</div><div>1.46</div><div>1.50</div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="cli">
-  <div class="si">
-    <div class="sl rv">Command Line</div>
-    <h2 class="st rv">Same executable, terminal or desktop.</h2>
-    <p class="ss rv">Double-click Convertia.exe for the GUI, or run it with arguments for batch conversion. CLI redirection works.</p>
-    <div class="cli rv">
-      <div class="cli-head">
-        <div class="cli-dots"><span></span><span></span><span></span></div>
-        <button class="cli-copy" onclick="copyCli()">Copy</button>
+  <section id="compare">
+    <div class="container reveal">
+      <span class="section-label">Compared to generic tools</span>
+      <h2 class="section-title">What generic converters miss, Convertia keeps.</h2>
+      <div class="table-wrap">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Generic tools</th>
+              <th>Convertia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ChemDraw CDXML plates</td>
+              <td>Often miss grouped structures, page text, and property links</td>
+              <td>Native CDXML parser; walks &lt;group&gt; fragments in document order</td>
+            </tr>
+            <tr>
+              <td>Compound names (IUPAC captions)</td>
+              <td>Usually lost</td>
+              <td>Read via ChemDraw <code>chemicalproperty</code> / BasisObjects → Title column</td>
+            </tr>
+            <tr>
+              <td>Plate labels (IDs, notes)</td>
+              <td>Not assigned per structure</td>
+              <td>CompoundID and Annotations via spatial proximity</td>
+            </tr>
+            <tr>
+              <td>Abbreviations (OMe, Ph, Boc…)</td>
+              <td>Often a single placeholder atom</td>
+              <td>Expanded from ChemDraw's embedded fragment → correct formula &amp; SMILES</td>
+            </tr>
+            <tr>
+              <td>R-groups (R1, R2…)</td>
+              <td>Inconsistent or dropped</td>
+              <td>Dummy atoms with map numbers ([*:1]) in SMILES</td>
+            </tr>
+            <tr>
+              <td>Row order on dense plates</td>
+              <td>Undefined or re-sorted</td>
+              <td>Monotonic XmlIndex (0..N−1) matches the drawing</td>
+            </tr>
+            <tr>
+              <td>ChemDraw vs computed properties</td>
+              <td>Can overwrite each other</td>
+              <td>Separate namespaces: ChemDraw_* vs RDKit columns</td>
+            </tr>
+            <tr>
+              <td>Batch descriptors</td>
+              <td>Requires a separate workflow</td>
+              <td>Built-in: SMILES, MW, formula, CLogP, TPSA, HBD/HBA, rotatable bonds, stereocenters</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="cli-code" id="cli-code">
-<span class="p">$</span> <span class="cmd">Convertia.exe</span> input.cdxml -o output.csv
-<span class="p">$</span> <span class="cmd">Convertia.exe</span> library.sdf -o library.csv
-<span class="p">$</span> <span class="cmd">Convertia.exe</span> data.csv -o data.sdf <span class="f">--smiles-col</span> SMILES
-<span class="p">$</span> <span class="cmd">Convertia.exe</span> table.cdxml -o table.sdf <span class="f">--3d</span>
-<span class="p">$</span> <span class="cmd">Convertia.exe</span> huge.sdf -o huge.csv <span class="f">--no-properties</span>
+    </div>
+  </section>
+
+  <section id="convert" class="alt">
+    <div class="container reveal">
+      <span class="section-label">Supported conversions</span>
+      <h2 class="section-title">One engine, four input formats.</h2>
+      <p class="section-lead">Convertia handles SDF↔CSV and ChemDraw CDXML/CDX → SDF/CSV. CDX requires OpenBabel; CDXML does not.</p>
+      <div class="conv-grid">
+        <div class="conv-card">
+          <div class="conv-in">CDXML</div>
+          <div class="conv-arrow">→ → →</div>
+          <span class="conv-out">SDF</span><span class="conv-out">CSV</span>
+        </div>
+        <div class="conv-card">
+          <div class="conv-in">CDX</div>
+          <div class="conv-arrow">→ → →</div>
+          <span class="conv-out">SDF</span><span class="conv-out">CSV</span>
+          <div class="conv-note">Requires OpenBabel</div>
+        </div>
+        <div class="conv-card">
+          <div class="conv-in">SDF</div>
+          <div class="conv-arrow">→ → →</div>
+          <span class="conv-out">CSV</span>
+        </div>
+        <div class="conv-card">
+          <div class="conv-in">CSV</div>
+          <div class="conv-arrow">→ → →</div>
+          <span class="conv-out">SDF</span>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="limits">
-  <div class="si">
-    <div class="sl rv">Known Limitations</div>
-    <h2 class="st rv">What Convertia does not do.</h2>
-    <p class="ss rv">The tool extracts connectivity and data — it does not round-trip 2D drawings.</p>
-    <div class="lim-list">
-      <div class="lim-item rv rd1"><span class="lim-tag lim-crit">Critical</span><div>2D drawing elements (coordinates, bond styles, arrows, colors) are not preserved.</div></div>
-      <div class="lim-item rv rd2"><span class="lim-tag lim-crit">Critical</span><div>Complex stereochemistry may not survive roundtrip — verify after conversion.</div></div>
-      <div class="lim-item rv rd3"><span class="lim-tag lim-med">Medium</span><div>Multi-attachment nicknames (linkers with 2+ attachment points) are not expanded.</div></div>
-      <div class="lim-item rv rd1"><span class="lim-tag lim-high">High</span><div>Page text → structure assignment uses coordinates; dense plates may still mis-associate labels.</div></div>
-      <div class="lim-item rv rd2"><span class="lim-tag lim-crit">Critical</span><div>CDX binary requires OpenBabel; CDXML/SDF/CSV work without it.</div></div>
-      <div class="lim-item rv rd3"><span class="lim-tag lim-high">High</span><div>CSV/SDF multiline fields may be fragile; use --strict to fail on raw newlines.</div></div>
+  <section id="columns">
+    <div class="container reveal">
+      <span class="section-label">Output columns</span>
+      <h2 class="section-title">Two namespaces, one clean row.</h2>
+      <p class="section-lead">Properties are grouped by source so nothing is silently overwritten.</p>
+
+      <div class="tabs">
+        <button class="tab-btn active" type="button" data-tab="meta">Metadata</button>
+        <button class="tab-btn" type="button" data-tab="rdkit">RDKit computed</button>
+        <button class="tab-btn" type="button" data-tab="chemdraw">ChemDraw_*</button>
+      </div>
+
+      <div class="tab-panel active" id="panel-meta">
+        <p class="section-lead" style="margin-bottom:1rem">Parser metadata appears first in every row.</p>
+        <div class="chip-list">
+          <span class="chip chip-meta">XmlIndex</span>
+          <span class="chip chip-meta">Title</span>
+          <span class="chip chip-meta">CompoundID</span>
+          <span class="chip chip-meta">Annotations</span>
+        </div>
+      </div>
+      <div class="tab-panel" id="panel-rdkit">
+        <p class="section-lead" style="margin-bottom:1rem">Standard RDKit descriptors, with CLogP computed by JPLogP (not Wildman–Crippen MolLogP).</p>
+        <div class="chip-list">
+          <span class="chip chip-rdkit">SMILES</span>
+          <span class="chip chip-rdkit">MolecularWeight</span>
+          <span class="chip chip-rdkit">Formula</span>
+          <span class="chip chip-rdkit">CLogP</span>
+          <span class="chip chip-rdkit">TPSA</span>
+          <span class="chip chip-rdkit">NumHAcceptors</span>
+          <span class="chip chip-rdkit">NumHDonors</span>
+          <span class="chip chip-rdkit">NumRotatableBonds</span>
+          <span class="chip chip-rdkit">NumHeavyAtoms</span>
+          <span class="chip chip-rdkit">NumStereoCenters</span>
+        </div>
+      </div>
+      <div class="tab-panel" id="panel-chemdraw">
+        <p class="section-lead" style="margin-bottom:1rem">ChemDraw properties keep the ChemDraw_ prefix. Empty label templates are dropped.</p>
+        <div class="chip-list">
+          <span class="chip chip-cd">ChemDraw_LogP</span>
+          <span class="chip chip-cd">ChemDraw_MeltingPoint</span>
+          <span class="chip chip-cd">ChemDraw_MolecularWeight</span>
+          <span class="chip chip-cd">…any ChemDraw ChemProp</span>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="license">
-  <div class="si">
-    <div class="sl rv">License & Credits</div>
-    <h2 class="st rv">Open by design.</h2>
-    <p class="ss rv">Convertia is offered as a public research tool, not a commercial product. It composes generous open-source libraries and gives that back to the community.</p>
-    <div class="pg">
-      <div class="pc rv rd1"><div class="ic">📄</div><h3>Project Code</h3><p><strong>MIT License</strong> — original parsing, GUI, converters, and standalone launcher.</p></div>
-      <div class="pc rv rd2"><div class="ic">🧪</div><h3>JPLogP CLogP</h3><p><strong>LGPL v2.1+</strong> — adapted from CDK / Lhasa Limited (Plante & Werner, 2018).</p></div>
-      <div class="pc rv rd3"><div class="ic">⚛️</div><h3>Bundled Libraries</h3><p>RDKit (BSD), OpenBabel (GPL v2 when included), Python (PSF). See THIRD_PARTY_NOTICES.md before redistributing binaries.</p></div>
+  <section id="architecture" class="alt">
+    <div class="container reveal">
+      <span class="section-label">Architecture</span>
+      <h2 class="section-title">A thin standalone shell around a core engine.</h2>
+      <p class="section-lead">The combined Convertia.exe does not duplicate conversion logic — it imports the same package used by the Python CLI.</p>
+      <div class="arch-flow">
+        <div class="arch-box">
+          <div class="arch-label">Standalone launcher</div>
+          <div class="arch-title">Convertia.exe</div>
+          <div class="arch-files">app_entry.py · win_console.py · startup_errors.py</div>
+        </div>
+        <div class="arch-arrow">↓</div>
+        <div class="arch-box core">
+          <div class="arch-label">Core conversion engine</div>
+          <div class="arch-title">sdf_csv_converter package</div>
+          <div class="arch-modules">
+            <div class="arch-mod"><strong>cdx_parser.py</strong>CDXML/CDX parse</div>
+            <div class="arch-mod"><strong>molecule_processor.py</strong>RDKit descriptors</div>
+            <div class="arch-mod"><strong>clogp.py</strong>JPLogP CLogP</div>
+            <div class="arch-mod"><strong>sdf_to_csv.py</strong>SDF ↔ CSV</div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<footer>
-  <div class="si">
-    <p>Convertia — built for medicinal chemistry and SAR workflows.</p>
-    <p style="margin-top:.5rem"><a href="https://github.com/sameer24688-jpg/Convertia" target="_blank">GitHub</a> · <a href="sdf_csv_converter/README.md">Full README</a> · <a href="standalone/ARCHITECTURE.md">Architecture</a></p>
-    <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--bd)">
-      <p style="font-size:.95rem;color:var(--txt);font-weight:600">Created by <a href="https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top" target="_blank" style="color:var(--teal)">Sameer Reddy M</a></p>
-      <p style="font-size:.85rem;color:var(--muted);margin-top:.3rem"><a href="https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top" target="_blank" style="color:var(--muted)">sameer24688-jpg.github.io</a></p>
+  <section id="cli">
+    <div class="container reveal">
+      <span class="section-label">Command line</span>
+      <h2 class="section-title">Same executable, terminal or desktop.</h2>
+      <p class="section-lead">Double-click Convertia.exe for the GUI (drag-and-drop or file picker), or run it with arguments for batch conversion. CLI redirection works.</p>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <button class="copy-btn" type="button" onclick="copyCli()">Copy</button>
+        </div>
+        <pre class="terminal-body" id="cli-code"><span class="prompt">$</span> Convertia.exe input.cdxml -o output.csv
+<span class="prompt">$</span> Convertia.exe library.sdf -o library.csv
+<span class="prompt">$</span> Convertia.exe data.csv -o data.sdf <span class="flag">--smiles-col</span> SMILES
+<span class="prompt">$</span> Convertia.exe table.cdxml -o table.sdf <span class="flag">--3d</span>
+<span class="prompt">$</span> Convertia.exe huge.sdf -o huge.csv <span class="flag">--no-properties</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="limits" class="alt">
+    <div class="container reveal">
+      <span class="section-label">Known limitations</span>
+      <h2 class="section-title">What Convertia does not do.</h2>
+      <p class="section-lead">The tool extracts connectivity and data — it does not round-trip 2D drawings.</p>
+      <div class="lim-grid">
+        <div class="lim-item">
+          <span class="lim-tag lim-crit">Critical</span>
+          <div>2D drawing elements (coordinates, bond styles, arrows, colors) are not preserved.</div>
+        </div>
+        <div class="lim-item">
+          <span class="lim-tag lim-crit">Critical</span>
+          <div>Complex stereochemistry may not survive roundtrip — verify after conversion.</div>
+        </div>
+        <div class="lim-item">
+          <span class="lim-tag lim-med">Medium</span>
+          <div>Multi-attachment nicknames (linkers with 2+ attachment points) are not expanded.</div>
+        </div>
+        <div class="lim-item">
+          <span class="lim-tag lim-high">High</span>
+          <div>Page text → structure assignment uses coordinates; dense plates may still mis-associate labels.</div>
+        </div>
+        <div class="lim-item">
+          <span class="lim-tag lim-crit">Critical</span>
+          <div>CDX binary requires OpenBabel; CDXML/SDF/CSV work without it.</div>
+        </div>
+        <div class="lim-item">
+          <span class="lim-tag lim-high">High</span>
+          <div>CSV/SDF multiline fields may be fragile; use --strict to fail on raw newlines.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="license">
+    <div class="container reveal">
+      <span class="section-label">License &amp; credits</span>
+      <h2 class="section-title">Open by design.</h2>
+      <p class="section-lead">Convertia is offered as a public research tool, not a commercial product. It composes generous open-source libraries and gives that back to the community.</p>
+      <div class="card-grid">
+        <article class="card">
+          <div class="card-icon">📄</div>
+          <h3>Project code</h3>
+          <p><strong style="color:var(--text)">MIT License</strong> — original parsing, GUI, converters, and standalone launcher.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">🧪</div>
+          <h3>JPLogP CLogP</h3>
+          <p><strong style="color:var(--text)">LGPL v2.1+</strong> — adapted from CDK / Lhasa Limited (Plante &amp; Werner, 2018).</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">⚛️</div>
+          <h3>Bundled libraries</h3>
+          <p>RDKit (BSD), OpenBabel (GPL v2 when included), Python (PSF). See THIRD_PARTY_NOTICES.md before redistributing binaries.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p class="footer-title">Convertia — built for medicinal chemistry and SAR workflows.</p>
+    <p class="footer-links">
+      <a href="https://github.com/sameer24688-jpg/Convertia" target="_blank" rel="noopener">GitHub</a>
+      · <a href="sdf_csv_converter/README.md">Full README</a>
+      · <a href="standalone/ARCHITECTURE.md">Architecture</a>
+    </p>
+    <div class="footer-credit">
+      <p>Created by <a class="author" href="https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top" target="_blank" rel="noopener">Dr. Sameer Reddy Marri</a></p>
+      <p style="margin-top:0.35rem">Postdoctoral Associate, Boston University · Center for Molecular Discovery</p>
+      <p style="margin-top:0.5rem"><a href="https://sameer24688-jpg.github.io/SameerReddyM.github.io/#top" target="_blank" rel="noopener">sameer24688-jpg.github.io</a></p>
     </div>
   </div>
 </footer>
 
-<button id="btt" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+<button id="back-to-top" type="button" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
 <script>
-// Scroll progress + back-to-top visibility
-const btt=document.getElementById('btt');
-window.addEventListener('scroll',()=>{
-  const h=document.documentElement;
-  const pct=h.scrollTop/(h.scrollHeight-h.clientHeight)*100;
-  document.getElementById('sp').style.width=pct+'%';
-  btt.classList.toggle('show',h.scrollTop>600);
-});
+(function () {
+  const progress = document.getElementById('scroll-progress');
+  const btt = document.getElementById('back-to-top');
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
 
-// Reveal on scroll
-const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')})},{threshold:.1});
-document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+  window.addEventListener('scroll', function () {
+    const root = document.documentElement;
+    const pct = root.scrollTop / (root.scrollHeight - root.clientHeight) * 100;
+    progress.style.width = pct + '%';
+    btt.classList.toggle('visible', root.scrollTop > 500);
 
-// Counter animation
-const countObs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){const t=e.target;let n=0;const c=parseInt(t.dataset.count);const step=Math.max(1,Math.floor(c/30));const iv=setInterval(()=>{n+=step;if(n>=c){n=c;clearInterval(iv)}t.textContent=n},40);countObs.unobserve(t)}})},{threshold:.5});
-document.querySelectorAll('[data-count]').forEach(el=>countObs.observe(el));
-
-// Tabs
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('act'));
-    tab.classList.add('act');
-    document.getElementById('panel-'+tab.dataset.tab).classList.add('act');
+    let current = '';
+    sections.forEach(function (s) {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    navLinks.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
   });
-});
 
-// Copy CLI
-function copyCli(){
-  const code=document.getElementById('cli-code').innerText;
-  navigator.clipboard.writeText(code).then(()=>{
-    const btn=document.querySelector('.cli-copy');
-    const old=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');
-    setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied')},2000);
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const revealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(function (el) { revealObs.observe(el); });
+
+    const countObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        const target = parseInt(el.dataset.count, 10);
+        let n = 0;
+        const step = Math.max(1, Math.floor(target / 30));
+        const iv = setInterval(function () {
+          n += step;
+          if (n >= target) { n = target; clearInterval(iv); }
+          el.textContent = n;
+        }, 40);
+        countObs.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count]').forEach(function (el) { countObs.observe(el); });
+
+    const pipeSteps = document.querySelectorAll('.pipe-step');
+    let idx = 0;
+    setInterval(function () {
+      pipeSteps.forEach(function (s) { s.classList.remove('active'); });
+      if (pipeSteps[idx]) pipeSteps[idx].classList.add('active');
+      idx = (idx + 1) % pipeSteps.length;
+    }, 2200);
+  } else {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('visible'); });
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
   });
-}
+})();
 
-// Active nav
-const sections=document.querySelectorAll('section[id]');
-window.addEventListener('scroll',()=>{
-  let cur='';sections.forEach(s=>{if(scrollY>=s.offsetTop-100)cur=s.id});
-  document.querySelectorAll('.nv a').forEach(a=>{a.classList.remove('act');if(a.getAttribute('href')==='#'+cur)a.classList.add('act')});
-});
-
-// Pipeline stage cycling animation
-const pipeStages=document.querySelectorAll('.pipe-stage');
-let pipeIdx=0;
-function cyclePipeline(){
-  pipeStages.forEach(s=>s.classList.remove('act'));
-  if(pipeStages[pipeIdx])pipeStages[pipeIdx].classList.add('act');
-  pipeIdx=(pipeIdx+1)%pipeStages.length;
-}
-setInterval(cyclePipeline,2000);
-
-// Interactive conversion cards — click to show CLI hint
-document.querySelectorAll('.conv-card').forEach(card=>{
-  card.addEventListener('click',()=>{
-    const inp=card.querySelector('.conv-in').textContent;
-    const outs=[...card.querySelectorAll('.conv-out')].map(o=>o.textContent);
-    const out=outs[0]||'csv';
-    card.style.transform='scale(1.05)';
-    setTimeout(()=>card.style.transform='',300);
+function copyCli() {
+  const text = document.getElementById('cli-code').innerText;
+  navigator.clipboard.writeText(text).then(function () {
+    const btn = document.querySelector('.copy-btn');
+    const prev = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function () {
+      btn.textContent = prev;
+      btn.classList.remove('copied');
+    }, 2000);
   });
-});
-
-// Respect reduced motion
-if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  document.querySelectorAll('.rv').forEach(el=>el.classList.add('vis'));
 }
 </script>
-</body>
 
+</body>
 </html>

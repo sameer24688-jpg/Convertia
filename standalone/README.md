@@ -48,7 +48,7 @@ directory; the GUI splash screen covers that delay.
 
 The desktop window (`sdf_csv_converter/gui.py`) provides:
 
-- **Input** — browse SDF, CSV, CDX, or CDXML
+- **Input** — drag and drop SDF, CSV, CDX, or CDXML onto the window, or use **Browse…**
 - **Output format** — choose **CSV** or **SDF** (radio buttons)
 - **Output file** — browse save path (extension follows selected format)
 - **Convert** — high-contrast teal action button
@@ -126,7 +126,10 @@ Rebuild after changing `sdf_csv_converter`:
 ```bash
 cd standalone
 python build_standalone.py --both    # onefile + onedir
+python check_source_sync.py          # confirm dist matches source
 ```
+
+`standalone/dist/` does **not** hold a second copy of the Python source — PyInstaller freezes `sdf_csv_converter/` into the exe at build time. `SOURCE_STAMP.txt` in `dist/` records SHA-256 hashes of every package file so you can verify sync.
 
 ## Files
 

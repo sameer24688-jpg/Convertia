@@ -29,7 +29,7 @@ for asset_name in ("app.ico", "logo.png", "image.png"):
     asset_path = os.path.join(ASSETS_DIR, asset_name)
     if os.path.isfile(asset_path):
         datas.append((asset_path, "assets"))
-for pkg in ("rdkit", "openbabel", "tqdm"):
+for pkg in ("rdkit", "openbabel", "tqdm", "windnd"):
     try:
         d, b, h = collect_all(pkg)
         datas += d
@@ -72,6 +72,7 @@ hiddenimports += [
     "tkinter.filedialog",
     "tkinter.messagebox",
     "tkinter.ttk",
+    "windnd",
 ]
 
 a = Analysis(
